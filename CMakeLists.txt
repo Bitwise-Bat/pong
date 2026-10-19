@@ -31,3 +31,5 @@ if (EMSCRIPTEN)
 else()
     message(FATAL_ERROR "Pong only supports WebAssembly/Web builds.")
 endif ()
+
+target_include_directories(pong PRIVATE source)
