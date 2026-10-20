@@ -33,3 +33,10 @@ else()
 endif ()
 
 target_include_directories(pong PRIVATE source)
+target_sources(pong
+        PRIVATE
+        source/renderer/sdl/renderer.cpp
+            source/paddle.cpp
+            source/input.cpp
+            source/ball.cpp
+            source/game.cpp)
