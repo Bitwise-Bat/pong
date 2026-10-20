@@ -1,20 +1,34 @@
 import createPong, {type MainModule} from "../wasm/pong.js"
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
+
+let gamePromise : Promise<MainModule> | null = null;
 
 export default () => {
-    const [isReady, setReady] = useState(false);
     const [game, setGame] = useState<MainModule | null>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     
     useEffect(() => {
-        createPong().then(mo => {
-            setGame(mo);
-            setReady(true);
+        if (!canvasRef.current) return;
+        
+        let active = true;
+        
+        gamePromise ??= createPong({
+            canvas: canvasRef.current,
+            requestFullscreen: undefined
+        });
+
+        gamePromise.then(mo => {
+            if (active) setGame(mo);
         }).catch((err) => {
             console.error(err);
         });
+
+        return () => {
+            active = false;
+        }
     }, [])
     
     return {
-        game,  isReady
+        game, isReady: game !== null, canvasRef
     }
 }
