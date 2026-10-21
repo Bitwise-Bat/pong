@@ -13,6 +13,28 @@ namespace pong
     namespace
     {
         constexpr Rect BACKGROUND_PIXELS{0.0f, 0.0f, 1024.0f, 572.0f};
+        constexpr float MATERIAL_TILE_SIZE = 50.0f;
+
+        uint16_t material_health(Material material)
+        {
+            switch (material)
+            {
+            case Material::Stone:   return 5;
+            case Material::Iron:    return 10;
+            case Material::Bronze:  return 20;
+            case Material::Silver:  return 40;
+            case Material::Gold:    return 60;
+            case Material::Diamond: return 80;
+            }
+            return 1;
+        }
+
+        // Material tiles sit in a row at y = 0, right after the background, in enum order.
+        Rect material_pixels(Material material)
+        {
+            const float x = BACKGROUND_PIXELS.w + static_cast<float>(material) * MATERIAL_TILE_SIZE;
+            return {x, 0.0f, MATERIAL_TILE_SIZE, MATERIAL_TILE_SIZE};
+        }
 
         void resolve_overlap(Ball& ball, float dx, float dy)
         {
@@ -67,7 +89,7 @@ namespace pong
 
         for (const auto& box : m_boxes)
         {
-            r->fill_rect(box.rect, box.color());
+            r->fill_rect(box.rect, box.color(), 0, pixels_to_uv(material_pixels(box.material)));
         }
 
         r->fill_rect(m_paddle.rect, {255, 255, 255, 255});
@@ -239,8 +261,8 @@ namespace pong
             spawned.push_back(Ball::make_from(ball));
             break;
         case BoxEffect::Bigger:
-            ball.modifiers.push_back({ .stat = Stat::Size,   .op = Op::Add, .value = 10, .remaining = -1.f });
-            ball.modifiers.push_back({ .stat = Stat::Damage, .op = Op::Add, .value = 1,  .remaining = 100.f });
+            ball.modifiers.push_back({ .stat = Stat::Size,   .op = Op::Add, .value = 2, .remaining = -1.f });
+            ball.modifiers.push_back({ .stat = Stat::Damage, .op = Op::Add, .value = 1,  .remaining = -1.f });
             break;
         case BoxEffect::None:
             break;
@@ -267,8 +289,8 @@ namespace pong
 
     void Game::generate_boxes()
     {
-        constexpr size_t rows = 10;
-        constexpr float cell = 20.0f;
+        constexpr size_t rows = 5;
+        constexpr float cell = 40.0f;
         const size_t cols = static_cast<size_t>(m_field.width / cell);
 
         for (size_t y = 0; y < rows; ++y)
@@ -278,7 +300,10 @@ namespace pong
                 Box box{};
 
                 box.rect = { static_cast<float>(x) * cell, static_cast<float>(y) * cell, cell, cell };
+                box.base = {255, 255, 255, 255};
                 box.effect = roll_buff();
+                box.material = roll_material();
+                box.health = box.max_health = material_health(box.material);
 
                 m_boxes.push_back(box);
             }

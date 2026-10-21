@@ -5,12 +5,14 @@
 namespace pong
 {
     enum class BoxEffect : uint8_t { None, ExtraBall, Bigger };
+    enum class Material : uint8_t { Stone, Iron, Bronze, Silver, Gold, Diamond };
     
     struct Box
     {
         Rect rect{};
         Color base{50, 50, 50, 255};
         BoxEffect effect{};
+        Material material{};
         uint16_t health{2};
         uint16_t max_health{2};
         
