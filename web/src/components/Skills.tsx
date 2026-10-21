@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Handle, Position, ReactFlow, type Edge, type Node, type NodeProps } from "@xyflow/react";
+import { Handle, Position, ReactFlow, type BuiltInEdge, type Node, type NodeProps } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import type { MainModule } from "../wasm/pong";
 import useEvent from "../hooks/useEvent.ts";
@@ -29,7 +29,7 @@ const SkillCard = ({ data: { skill } }: NodeProps<SkillNode>) => {
             ? "border-white/60 bg-slate-800 hover:bg-slate-700 cursor-pointer"
             : "border-white/15 bg-slate-900 opacity-50";
 
-    return <div className={`w-40 px-3 py-2 rounded-lg border text-white text-center ${state}`}>
+    return <div className={`w-40 px-3 py-2 rounded-sm border text-white text-center ${state}`}>
         <Handle type="target" position={Position.Top} style={{ opacity: 0 }}/>
         <div className="font-semibold">{skill.name}</div>
         <div className="text-xs text-white/60">{skill.description}</div>
@@ -62,10 +62,12 @@ export default ({ game, onClose }: SkillsProps) => {
         data: { skill },
     }));
 
-    const edges: Edge[] = skills.flatMap((skill) => skill.parents.map((parent) => ({
+    const edges: BuiltInEdge[] = skills.flatMap((skill) => skill.parents.map((parent): BuiltInEdge => ({
         id: `${parent}-${skill.id}`,
         source: String(parent),
         target: String(skill.id),
+        type: "smoothstep",
+        pathOptions: { borderRadius: 4 },
         style: { stroke: skills[parent].owned ? "rgb(103 232 249)" : "rgb(255 255 255 / 0.25)" },
     })));
 
@@ -76,6 +78,7 @@ export default ({ game, onClose }: SkillsProps) => {
             nodeTypes={nodeTypes}
             colorMode="dark"
             fitView
+            proOptions={{ hideAttribution: true }}
             nodesDraggable={false}
             nodesConnectable={false}
             elementsSelectable={false}
@@ -83,7 +86,7 @@ export default ({ game, onClose }: SkillsProps) => {
         />
         <button
             onClick={onClose}
-            className="absolute bottom-3 left-3 px-3 py-1 rounded bg-black/60 text-sm text-white/70 hover:text-white cursor-pointer"
+            className="absolute bottom-3 left-3 px-3 py-1 rounded-sm bg-black/60 text-sm text-white/70 hover:text-white cursor-pointer"
         >
             Back
         </button>
