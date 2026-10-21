@@ -4,7 +4,7 @@
 
 namespace pong
 {
-    enum class Stat : uint8_t { Damage, Health, Speed, Size, Bounds, Count };
+    enum class Stat : uint8_t { Damage, Health, Speed, Size, Bounds, Time, Count }; // Time is the round length, not a ball stat
     enum class Op : uint8_t { Add, Multiply };
     
     struct Modifier

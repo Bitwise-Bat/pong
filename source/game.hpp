@@ -54,7 +54,7 @@ namespace pong
 
         void apply_box_rewards(Ball& ball, const Box& box, std::vector<Ball>& spawned);
         void generate_boxes();
-        void apply_skills(Ball& ball) const;
+        void apply_skills(Stats& stats) const;
         void publish_time(bool force);
         void end_round(GameOverReason reason);
 

@@ -123,13 +123,16 @@ namespace pong
         ball.base[Stat::Bounds] = 10;
         ball.base[Stat::Speed] = 300;
         ball.base[Stat::Health] = 1;
-        apply_skills(ball);
+        apply_skills(ball.base);
 
         m_balls.push_back(ball);
 
         generate_boxes();
 
-        m_time_left = ROUND_TIME;
+        Stats round{};
+        round[Stat::Time] = ROUND_TIME;
+        apply_skills(round);
+        m_time_left = round[Stat::Time];
         publish_time(true);
     }
 
@@ -163,7 +166,7 @@ namespace pong
     }
 
     // Same order as Ball::stats(): additions first, then multipliers.
-    void Game::apply_skills(Ball& ball) const
+    void Game::apply_skills(Stats& stats) const
     {
         for (const Op op : { Op::Add, Op::Multiply })
         {
@@ -175,8 +178,8 @@ namespace pong
                 for (size_t level = 0; level < m_skill_levels[i]; ++level)
                 {
                     const float value = skill.levels[level].value;
-                    if (op == Op::Add) ball.base[skill.stat] += value;
-                    else ball.base[skill.stat] *= value;
+                    if (op == Op::Add) stats[skill.stat] += value;
+                    else stats[skill.stat] *= value;
                 }
             }
         }
