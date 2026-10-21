@@ -107,10 +107,9 @@ namespace pong
         m_boxes.clear();
         m_particles.clear();
 
-        m_ores.fill(0);
         for (size_t i = 0; i < m_ores.size(); ++i)
         {
-            m_bus.publish(OreChanged{ .material = static_cast<uint8_t>(i), .count = 0 });
+            m_bus.publish(OreChanged{ .material = static_cast<uint8_t>(i), .count = m_ores[i] });
         }
 
         Ball ball{};
