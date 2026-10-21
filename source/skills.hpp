@@ -37,7 +37,7 @@ namespace pong
         {
             {
                 "Sharp Ball", "damage", 0.0f, 0.0f, {-1, -1}, Stat::Damage, Op::Add,
-                {{{25, 1}, {50, 2}, {100, 3}}}
+                {{{10, 1}, {25, 2}, {100, 3}}}
             },
             {
                 "Heavy Ball", "size", -200.0f, 150.0f, {0, -1}, Stat::Size, Op::Add,
