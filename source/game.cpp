@@ -21,6 +21,7 @@ namespace pong
         constexpr Color BLACK{0, 0, 0, 255};
         constexpr float BOX_CELL = 25.0f;
         constexpr float ROUND_TIME = 60.0f;
+        constexpr uint16_t CHEST_HEALTH = 50;
 
         uint16_t material_health(Material material)
         {
@@ -37,7 +38,7 @@ namespace pong
             return 1;
         }
 
-        // Atlas row at y = 0, left to right: materials (enum order), damage overlays, paddle (3 cells), ball (1 cell).
+        // Atlas row at y = 0, left to right: materials (enum order), damage overlays, paddle (3 cells), ball (1 cell), chest (1 cell).
         Rect material_pixels(Material material)
         {
             const float x = MATERIALS_X + static_cast<float>(material) * MATERIAL_TILE_SIZE;
@@ -54,6 +55,7 @@ namespace pong
         constexpr float DAMAGE_END_X = MATERIALS_X + (MATERIAL_COUNT + DAMAGE_STAGES) * MATERIAL_TILE_SIZE;
         constexpr Rect PADDLE_PIXELS{DAMAGE_END_X, 0.0f, 3.0f * MATERIAL_TILE_SIZE, MATERIAL_TILE_SIZE};
         constexpr Rect BALL_PIXELS{DAMAGE_END_X + PADDLE_PIXELS.w, 0.0f, MATERIAL_TILE_SIZE, MATERIAL_TILE_SIZE};
+        constexpr Rect CHEST_PIXELS{BALL_PIXELS.x + BALL_PIXELS.w, 0.0f, MATERIAL_TILE_SIZE, MATERIAL_TILE_SIZE};
 
         // -1 for an undamaged box, otherwise 0..DAMAGE_STAGES-1 by the share of health lost.
         int damage_stage(const Box& box)
@@ -236,6 +238,11 @@ namespace pong
             if (stage >= 0)
             {
                 r->fill_rect(box.rect, WHITE, 0, pixels_to_uv(damage_pixels(stage)));
+            }
+
+            if (box.effect != BoxEffect::None)
+            {
+                r->fill_rect(box.rect, WHITE, 0, pixels_to_uv(CHEST_PIXELS));
             }
         }
 
@@ -509,8 +516,18 @@ namespace pong
 
                 box.rect = { static_cast<float>(x) * BOX_CELL, static_cast<float>(y) * BOX_CELL, BOX_CELL, BOX_CELL };
                 box.effect = roll_buff();
-                box.material = roll_material();
-                box.health = box.max_health = material_health(box.material);
+
+                // A box with an effect is a chest: a stone box with extra health.
+                if (box.effect != BoxEffect::None)
+                {
+                    box.material = Material::Stone;
+                    box.health = box.max_health = CHEST_HEALTH;
+                }
+                else
+                {
+                    box.material = roll_material();
+                    box.health = box.max_health = material_health(box.material);
+                }
 
                 m_boxes.push_back(box);
             }
