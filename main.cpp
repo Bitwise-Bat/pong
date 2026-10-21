@@ -68,7 +68,7 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     
     app->game.update(delta_time);
     
-    renderer->clear({20, 20, 20, 255});
+    renderer->clear({10, 10, 150, 255});
     
     app->game.render(renderer);
     
