@@ -37,7 +37,7 @@ namespace pong
 
     private:
         std::mt19937 m_rng{ std::random_device{}() };
-        std::discrete_distribution<uint8_t> m_buffPick{ 80, 10, 10 };
+        std::discrete_distribution<uint8_t> m_buffPick{ 98, 1, 1 };
         std::discrete_distribution<uint8_t> m_materialPick{ 100, 15, 7, 4, 2, 1 };
 
         BoxEffect roll_buff() { return static_cast<BoxEffect>(m_buffPick(m_rng)); }
