@@ -4,6 +4,8 @@
 #include <SDL3/SDL_stdinc.h>
 #include <dr_mp3.h>
 
+#include <array>
+#include <atomic>
 #include <memory>
 #include <vector>
 
@@ -11,6 +13,8 @@
 
 namespace pong
 {
+    enum class Volume : uint8_t { Main, Music, Sfx, Count };
+
     class Audio
     {
     public:
@@ -21,6 +25,10 @@ namespace pong
         Audio& operator=(const Audio&) = delete;
 
         void init(EventBus& bus);
+
+        [[nodiscard]] float volume(Volume channel) const { return m_volumes[static_cast<size_t>(channel)]; }
+        // value is clamped to 0..1.
+        void set_volume(Volume channel, float value);
 
     private:
         struct SdlFree
@@ -59,5 +67,7 @@ namespace pong
         SDL_AudioStream* m_music_stream{};
         EventBus::Subscription m_hit_sub{};
         EventBus::Subscription m_destroy_sub{};
+        // Read by the audio callback.
+        std::array<std::atomic<float>, static_cast<size_t>(Volume::Count)> m_volumes{ 1.0f, 1.0f, 1.0f };
     };
 }

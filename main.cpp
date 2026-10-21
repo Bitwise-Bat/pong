@@ -65,7 +65,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     upload_atlas(*app->renderer);
 
     app->audio.init(app->game.events());
-    app->save.init(app->game);
+    app->save.init(app->game, app->audio);
 
     app->game.restart();
     app->last_ms = static_cast<float>(SDL_GetTicksNS()) / 1.0e6f;

@@ -1,11 +1,14 @@
 #include "save.hpp"
 
 #include <algorithm>
+#include <array>
+#include <utility>
 #include <string>
 
 #include <emscripten/html5.h>
 #include <emscripten/val.h>
 
+#include "audio.hpp"
 #include "events.hpp"
 #include "game.hpp"
 #include "skills.hpp"
@@ -19,6 +22,9 @@ namespace pong
         constexpr const char* SAVE_KEY = "pong.save";
         constexpr int SAVE_VERSION = 1;
         constexpr size_t MATERIAL_COUNT = static_cast<size_t>(Material::Count);
+        constexpr std::array<std::pair<const char*, Volume>, 3> VOLUME_KEYS{{
+            { "main", Volume::Main }, { "music", Volume::Music }, { "sfx", Volume::Sfx },
+        }};
 
         const char* on_before_unload(int, const void*, void* user_data)
         {
@@ -27,9 +33,10 @@ namespace pong
         }
     }
 
-    void Save::init(Game& game)
+    void Save::init(Game& game, Audio& audio)
     {
         m_game = &game;
+        m_audio = &audio;
         load();
 
         m_skill_sub = game.events().subscribe<SkillBought>([this](const SkillBought&) { save(); });
@@ -53,10 +60,17 @@ namespace pong
             if (level > 0) skills.set(std::string(SKILLS[i].name), level);
         }
 
+        val volume = val::object();
+        for (const auto& [key, channel] : VOLUME_KEYS)
+        {
+            volume.set(key, m_audio->volume(channel));
+        }
+
         val data = val::object();
         data.set("version", SAVE_VERSION);
         data.set("ores", ores);
         data.set("skills", skills);
+        data.set("volume", volume);
 
         const auto json = val::global("JSON").call<std::string>("stringify", data);
         val::global("localStorage").call<void>("setItem", std::string(SAVE_KEY), json);
@@ -81,6 +95,16 @@ namespace pong
             {
                 const val ore = ores[static_cast<int>(i)];
                 if (ore.isNumber()) m_game->set_ore(i, ore.as<uint32_t>());
+            }
+        }
+
+        const val volume = data["volume"];
+        if (!volume.isNull() && volume.typeOf().as<std::string>() == "object")
+        {
+            for (const auto& [key, channel] : VOLUME_KEYS)
+            {
+                const val value = volume[key];
+                if (value.isNumber()) m_audio->set_volume(channel, value.as<float>());
             }
         }
 

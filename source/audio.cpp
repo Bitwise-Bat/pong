@@ -31,9 +31,18 @@ namespace pong
 
         m_stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &m_spec, &Audio::on_stream_needs_data, this);
         if (m_stream) SDL_ResumeAudioStreamDevice(m_stream);
+        set_volume(Volume::Main, volume(Volume::Main));
 
         m_hit_sub = bus.subscribe<BoxHit>([this](const BoxHit&) { play(m_hit); });
         m_destroy_sub = bus.subscribe<BoxDestroyed>([this](const BoxDestroyed&) { play(m_ore_destroy); });
+    }
+
+    void Audio::set_volume(Volume channel, float value)
+    {
+        value = std::clamp(value, 0.0f, 1.0f);
+        m_volumes[static_cast<size_t>(channel)] = value;
+
+        if (channel == Volume::Main && m_stream) SDL_SetAudioStreamGain(m_stream, value);
     }
 
     // All sounds are mixed into one stream, so they must share the format of the first one.
@@ -80,7 +89,7 @@ namespace pong
         for (Voice& voice : m_voices)
         {
             const Uint32 chunk = std::min(static_cast<Uint32>(amount), voice.sound->size - voice.offset);
-            SDL_MixAudio(buffer.data(), voice.sound->data.get() + voice.offset, m_spec.format, chunk, 1.0f);
+            SDL_MixAudio(buffer.data(), voice.sound->data.get() + voice.offset, m_spec.format, chunk, volume(Volume::Sfx));
             voice.offset += chunk;
         }
         std::erase_if(m_voices, [](const Voice& voice) { return voice.offset >= voice.sound->size; });
@@ -107,6 +116,6 @@ namespace pong
 
         std::vector<Uint8> music(buffer.size());
         const int got = SDL_GetAudioStreamData(m_music_stream, music.data(), size);
-        if (got > 0) SDL_MixAudio(buffer.data(), music.data(), m_spec.format, static_cast<Uint32>(got), MUSIC_VOLUME);
+        if (got > 0) SDL_MixAudio(buffer.data(), music.data(), m_spec.format, static_cast<Uint32>(got), MUSIC_VOLUME * volume(Volume::Music));
     }
 }

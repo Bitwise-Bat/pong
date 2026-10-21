@@ -3,6 +3,7 @@ import type {MainModule} from "../wasm/pong";
 import useEvent from "../hooks/useEvent.ts";
 import Skills from "./Skills.tsx";
 import Credits from "./Credits.tsx";
+import Settings from "./Settings.tsx";
 
 interface MenuProps {
     game: MainModule
@@ -15,6 +16,7 @@ export default ({ game } : MenuProps) => {
     const [timeUp, setTimeUp] = useState(false);
     const [skillsOpen, setSkillsOpen] = useState(false);
     const [creditsOpen, setCreditsOpen] = useState(false);
+    const [settingsOpen, setSettingsOpen] = useState(false);
 
     useEvent("gameOver", (e) => {
         setGameOver(true);
@@ -60,8 +62,15 @@ export default ({ game } : MenuProps) => {
             >
                 Credits
             </button>
+            <button
+                onClick={() => setSettingsOpen(true)}
+                className="-mt-7 text-xs uppercase tracking-[0.3em] pl-[0.3em] text-white/50 hover:text-white transition-colors cursor-pointer"
+            >
+                Settings
+            </button>
         </div>
         {skillsOpen && <Skills game={game} onClose={() => setSkillsOpen(false)}/>}
         {creditsOpen && <Credits onClose={() => setCreditsOpen(false)}/>}
+        {settingsOpen && <Settings game={game} onClose={() => setSettingsOpen(false)}/>}
     </div>
 }

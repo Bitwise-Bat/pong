@@ -109,6 +109,26 @@ namespace
         return g_ctx && g_ctx->game.buy_skill(id);
     }
 
+    emscripten::val bridge_get_volumes()
+    {
+        emscripten::val obj = emscripten::val::object();
+        if (!g_ctx) return obj;
+
+        obj.set("main", g_ctx->audio.volume(pong::Volume::Main));
+        obj.set("music", g_ctx->audio.volume(pong::Volume::Music));
+        obj.set("sfx", g_ctx->audio.volume(pong::Volume::Sfx));
+        return obj;
+    }
+
+    // channel follows pong::Volume: 0 main, 1 music, 2 sfx.
+    void bridge_set_volume(uint32_t channel, float value)
+    {
+        if (!g_ctx || channel >= static_cast<uint32_t>(pong::Volume::Count)) return;
+
+        g_ctx->audio.set_volume(static_cast<pong::Volume>(channel), value);
+        g_ctx->save.save();
+    }
+
     void bridge_start_game()
     {
         if (g_ctx) g_ctx->game.start();
@@ -149,4 +169,6 @@ EMSCRIPTEN_BINDINGS(pong)
     emscripten::function("startGame", &bridge_start_game);
     emscripten::function("getSkills", &bridge_get_skills);
     emscripten::function("buySkill", &bridge_buy_skill);
+    emscripten::function("getVolumes", &bridge_get_volumes);
+    emscripten::function("setVolume", &bridge_set_volume);
 }
