@@ -28,6 +28,13 @@ namespace pong
         constexpr float DROP_MAX_FALL_SPEED = 260.0f;
         constexpr float DROP_SPREAD_SPEED = 60.0f;
         constexpr float DROP_POP_SPEED = 120.0f;
+        constexpr uint32_t MAX_COMBO = 10;
+
+        // A box gives as many ores as the ball's combo, up to the cap bought with the Streak skill.
+        uint32_t combo_multiplier(const Ball& ball, uint32_t cap)
+        {
+            return std::clamp(ball.combo, 1u, cap);
+        }
 
         uint16_t material_health(Material material)
         {
@@ -110,6 +117,7 @@ namespace pong
         update_paddle(delta_time);
         m_particles.update(delta_time);
         m_damage_numbers.update(delta_time);
+        m_combo_numbers.update(delta_time);
     }
 
     void Game::restart()
@@ -123,12 +131,19 @@ namespace pong
         m_paddle.stats = {};
         m_paddle.stats[Stat::PaddleSpeed] = PADDLE_SPEED;
         apply_skills(m_paddle.stats);
+
+        Stats combo{};
+        combo[Stat::ComboCap] = 1.0f;
+        apply_skills(combo);
+        m_combo_cap = std::clamp(static_cast<uint32_t>(combo[Stat::ComboCap]), 1u, MAX_COMBO);
+
         m_paddle.rect.y = m_field.height - 4 - (m_paddle.height + m_paddle.rect.h) / 2;
 
         m_balls.clear();
         m_boxes.clear();
         m_particles.clear();
         m_damage_numbers.clear();
+        m_combo_numbers.clear();
         m_drops.clear();
 
         for (size_t i = 0; i < m_ores.size(); ++i)
@@ -157,6 +172,7 @@ namespace pong
         apply_skills(round);
         m_time_left = round[Stat::Time];
         publish_time(true);
+        publish_combo(true);
     }
 
     bool Game::can_buy_skill(size_t id) const
@@ -276,6 +292,7 @@ namespace pong
 
         m_particles.render(r);
         m_damage_numbers.render(r, DIGIT_PIXELS);
+        m_combo_numbers.render(r, DIGIT_PIXELS);
     }
 
     void Game::start()
@@ -307,6 +324,7 @@ namespace pong
             {
                 collide_balls_boxes();
                 collide_balls_balls();
+                publish_combo(false);
             }
         }
 
@@ -481,7 +499,17 @@ namespace pong
                     .color = color, .speed = 220.0f, .life = 0.7f, .size = 5.0f,
                 });
 
-                spawn_drop(box);
+                ++ball.combo;
+                const uint32_t multiplier = combo_multiplier(ball, m_combo_cap);
+                spawn_drop(box, multiplier);
+
+                // The streak floats above the damage number as "x3", growing with the streak.
+                if (multiplier > 1)
+                {
+                    const Rect above{box.rect.x, box.rect.y - box.rect.h * 0.7f, box.rect.w, box.rect.h};
+                    const float scale = 1.0f + static_cast<float>(multiplier - 2) * 0.15f;
+                    m_combo_numbers.add(above, multiplier, false, { .scale = scale, .prefix_x = true });
+                }
 
                 apply_box_rewards(ball, box, spawned);
                 dead.push_back(i);
@@ -516,7 +544,7 @@ namespace pong
         }
     }
 
-    void Game::spawn_drop(const Box& box)
+    void Game::spawn_drop(const Box& box, uint32_t amount)
     {
         std::uniform_real_distribution<float> spread{-DROP_SPREAD_SPEED, DROP_SPREAD_SPEED};
 
@@ -529,7 +557,19 @@ namespace pong
             .vx = spread(m_rng),
             .vy = -DROP_POP_SPEED,
             .material = box.material,
+            .amount = amount,
         });
+    }
+
+    void Game::publish_combo(bool force)
+    {
+        uint32_t best = 1;
+        for (const auto& ball : m_balls) best = std::max(best, combo_multiplier(ball, m_combo_cap));
+
+        if (!force && best == m_combo_shown) return;
+
+        m_combo_shown = best;
+        m_bus.publish(ComboChanged{ .multiplier = best });
     }
 
     void Game::update_drops(float delta_time)
@@ -546,7 +586,8 @@ namespace pong
             if (caught)
             {
                 const auto ore = static_cast<size_t>(drop.material);
-                m_bus.publish(OreChanged{ .material = static_cast<uint8_t>(ore), .count = ++m_ores[ore] });
+                m_ores[ore] += drop.amount;
+                m_bus.publish(OreChanged{ .material = static_cast<uint8_t>(ore), .count = m_ores[ore] });
 
                 m_particles.emit(m_rng, {
                     .x = drop.rect.x + drop.rect.w * 0.5f, .y = drop.rect.y + drop.rect.h * 0.5f,

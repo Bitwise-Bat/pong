@@ -2,6 +2,7 @@ import type {MainModule} from "../wasm/pong";
 import Menu from "./Menu.tsx";
 import Ores from "./Ores.tsx";
 import Timer from "./Timer.tsx";
+import Combo from "./Combo.tsx";
 
 interface OverlayProps {
     game: MainModule
@@ -14,5 +15,6 @@ export default ({ game } : OverlayProps) => {
         <Menu game={game}/>
         <Ores/>
         <Timer/>
+        <Combo/>
     </div>
 }

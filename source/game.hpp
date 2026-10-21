@@ -27,6 +27,7 @@ namespace pong
         Rect rect{};
         float vx{}, vy{};
         Material material{};
+        uint32_t amount{1};
     };
 
     class Game
@@ -71,7 +72,8 @@ namespace pong
         void collide_balls_balls();
 
         void apply_box_rewards(Ball& ball, const Box& box, std::vector<Ball>& spawned);
-        void spawn_drop(const Box& box);
+        void spawn_drop(const Box& box, uint32_t amount);
+        void publish_combo(bool force);
         void update_drops(float delta_time);
         void generate_boxes();
         void apply_skills(Stats& stats) const;
@@ -86,8 +88,11 @@ namespace pong
         Field m_field{};
         Particles m_particles{};
         DamageNumbers m_damage_numbers{};
+        DamageNumbers m_combo_numbers{ {110, 230, 245, 255}, {110, 230, 245, 255} };
         bool m_playing{};
         float m_time_left{};
+        uint32_t m_combo_shown{};
+        uint32_t m_combo_cap{1};
         uint32_t m_time_shown{};
         std::array<uint32_t, static_cast<size_t>(Material::Count)> m_ores{};
         std::array<uint8_t, SKILLS.size()> m_skill_levels{};

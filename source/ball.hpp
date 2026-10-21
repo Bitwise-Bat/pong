@@ -15,6 +15,7 @@ namespace pong
 
         Stats base{};
         std::vector<Modifier> modifiers{};
+        uint32_t combo{}; // boxes destroyed by this ball
 
         void update(float delta_time);
         void bounce_x();

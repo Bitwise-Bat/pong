@@ -4,8 +4,9 @@
 
 namespace pong
 {
-    // Damage..Bounds belong to the ball, Time is the round length, PaddleSpeed and Sprint belong to the paddle.
-    enum class Stat : uint8_t { Damage, Health, Speed, Size, Bounds, Time, PaddleSpeed, Sprint, Count };
+    // Damage..Bounds belong to the ball, Time is the round length, PaddleSpeed and Sprint belong to the paddle,
+    // ComboCap is the highest ore multiplier a streak can reach.
+    enum class Stat : uint8_t { Damage, Health, Speed, Size, Bounds, Time, PaddleSpeed, Sprint, ComboCap, Count };
     enum class Op : uint8_t { Add, Multiply };
     
     struct Modifier

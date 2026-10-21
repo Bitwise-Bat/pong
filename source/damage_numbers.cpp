@@ -15,11 +15,9 @@ namespace pong
         constexpr float DIGIT_SIZE = 16.0f;
         constexpr float KILLED_DIGIT_SIZE = 22.0f;
         constexpr float DIGIT_ADVANCE = 0.7f; // share of the glyph size between digits
-        constexpr Color NORMAL_COLOR{255, 255, 255, 255};
-        constexpr Color KILLED_COLOR{255, 220, 80, 255};
     }
 
-    void DamageNumbers::add(const Rect& box, uint32_t amount, bool killed)
+    void DamageNumbers::add(const Rect& box, uint32_t amount, bool killed, NumberStyle style)
     {
         for (auto& n : m_numbers)
         {
@@ -34,7 +32,7 @@ namespace pong
         m_numbers.push_back({
             .box_x = box.x, .box_y = box.y,
             .x = box.x + box.w * 0.5f, .y = box.y + box.h * 0.5f,
-            .amount = amount, .life = LIFE, .killed = killed,
+            .amount = amount, .life = LIFE, .killed = killed, .style = style,
         });
     }
 
@@ -61,20 +59,21 @@ namespace pong
     {
         for (const auto& n : m_numbers)
         {
-            const std::string text = std::to_string(n.amount);
-            const float size = n.killed ? KILLED_DIGIT_SIZE : DIGIT_SIZE;
+            const std::string text = (n.style.prefix_x ? "x" : "") + std::to_string(n.amount);
+            const float size = (n.killed ? KILLED_DIGIT_SIZE : DIGIT_SIZE) * n.style.scale;
             const float advance = size * DIGIT_ADVANCE;
             const float width = advance * static_cast<float>(text.size() - 1) + size;
 
             // Fully visible for the first half of the life, then fades out.
-            Color c = n.killed ? KILLED_COLOR : NORMAL_COLOR;
+            Color c = n.killed ? m_killed_color : m_normal_color;
             c.a = static_cast<uint8_t>(255.0f * std::min(1.0f, n.life / (LIFE * 0.5f)));
 
             float x = n.x - width * 0.5f;
             for (const char ch : text)
             {
                 Rect glyph = digit_pixels;
-                glyph.x += static_cast<float>(ch - '0') * digit_pixels.w;
+                const int index = ch == 'x' ? 10 : ch - '0';
+                glyph.x += static_cast<float>(index) * digit_pixels.w;
 
                 r->fill_rect({x, n.y - size * 0.5f, size, size}, c, 0, pixels_to_uv(glyph));
                 x += advance;

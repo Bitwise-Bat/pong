@@ -16,6 +16,12 @@ namespace pong
         GameOverReason reason{};
     };
 
+    // The highest ore multiplier among the balls in play.
+    struct ComboChanged
+    {
+        uint32_t multiplier{};
+    };
+
     struct TimeChanged
     {
         uint32_t seconds{};

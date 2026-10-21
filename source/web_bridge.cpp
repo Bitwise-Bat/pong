@@ -37,6 +37,17 @@ namespace
         g_on_event(obj);
     }
 
+    void on_combo_changed(const pong::ComboChanged& event)
+    {
+        if (g_on_event.isUndefined()) return;
+
+        emscripten::val obj = emscripten::val::object();
+        obj.set("type", "combo");
+        obj.set("multiplier", event.multiplier);
+
+        g_on_event(obj);
+    }
+
     void on_time_changed(const pong::TimeChanged& event)
     {
         if (g_on_event.isUndefined()) return;
@@ -159,6 +170,7 @@ void pong::bridge_attach(AppContext* ctx)
     g_subs.push_back(g_ctx->game.events().subscribe<OreChanged>(&on_ore_changed));
     g_subs.push_back(g_ctx->game.events().subscribe<GameOver>(&on_game_over));
     g_subs.push_back(g_ctx->game.events().subscribe<TimeChanged>(&on_time_changed));
+    g_subs.push_back(g_ctx->game.events().subscribe<ComboChanged>(&on_combo_changed));
     g_subs.push_back(g_ctx->game.events().subscribe<SkillBought>(&on_skill_bought));
 }
 

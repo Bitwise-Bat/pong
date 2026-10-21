@@ -5,6 +5,7 @@ export type PongEvent =
     | { type: "buffEnd";   buff: number }
     | { type: "skill";     id: number }
     | { type: "time";      seconds: number }
+    | { type: "combo";     multiplier: number }
     | { type: "gameOver";  reason: "time" | "balls" };
 
 export type EventType = PongEvent["type"];
