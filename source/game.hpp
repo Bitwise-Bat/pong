@@ -20,6 +20,14 @@
 
 namespace pong
 {
+    // Ore falling from a destroyed box; it counts only when the paddle catches it.
+    struct Drop
+    {
+        Rect rect{};
+        float vx{}, vy{};
+        Material material{};
+    };
+
     class Game
     {
     public:
@@ -54,6 +62,8 @@ namespace pong
         void collide_balls_balls();
 
         void apply_box_rewards(Ball& ball, const Box& box, std::vector<Ball>& spawned);
+        void spawn_drop(const Box& box);
+        void update_drops(float delta_time);
         void generate_boxes();
         void apply_skills(Stats& stats) const;
         void publish_time(bool force);
@@ -76,5 +86,6 @@ namespace pong
         EventBus m_bus{};
 
         std::vector<Box> m_boxes{};
+        std::vector<Drop> m_drops{};
     };
 }

@@ -22,6 +22,11 @@ namespace pong
         constexpr float BOX_CELL = 25.0f;
         constexpr float ROUND_TIME = 60.0f;
         constexpr uint16_t CHEST_HEALTH = 50;
+        constexpr float DROP_SIZE = 25.0f;
+        constexpr float DROP_GRAVITY = 500.0f;
+        constexpr float DROP_MAX_FALL_SPEED = 260.0f;
+        constexpr float DROP_SPREAD_SPEED = 60.0f;
+        constexpr float DROP_POP_SPEED = 120.0f;
 
         uint16_t material_health(Material material)
         {
@@ -43,6 +48,13 @@ namespace pong
         {
             const float x = MATERIALS_X + static_cast<float>(material) * MATERIAL_TILE_SIZE;
             return {x, 0.0f, MATERIAL_TILE_SIZE, MATERIAL_TILE_SIZE};
+        }
+
+        // Pickup icons sit in the row below their material tile.
+        Rect drop_pixels(Material material)
+        {
+            const float x = MATERIALS_X + static_cast<float>(material) * MATERIAL_TILE_SIZE;
+            return {x, MATERIAL_TILE_SIZE, MATERIAL_TILE_SIZE, MATERIAL_TILE_SIZE};
         }
 
         // Crack overlays follow the material tiles, ordered from lightly to heavily damaged.
@@ -112,6 +124,7 @@ namespace pong
         m_boxes.clear();
         m_particles.clear();
         m_damage_numbers.clear();
+        m_drops.clear();
 
         for (size_t i = 0; i < m_ores.size(); ++i)
         {
@@ -249,6 +262,11 @@ namespace pong
             }
         }
 
+        for (const auto& drop : m_drops)
+        {
+            r->fill_rect(drop.rect, WHITE, 0, pixels_to_uv(drop_pixels(drop.material)));
+        }
+
         r->fill_rect(m_paddle.visual_rect(), WHITE, 0, pixels_to_uv(PADDLE_PIXELS));
 
         m_particles.render(r);
@@ -267,6 +285,7 @@ namespace pong
         {
             sample_paddle_input();
             update_balls(delta_time);
+            update_drops(delta_time);
 
             m_time_left = std::max(0.0f, m_time_left - delta_time);
             publish_time(false);
@@ -302,6 +321,7 @@ namespace pong
     void Game::end_round(GameOverReason reason)
     {
         m_playing = false;
+        m_drops.clear();
         m_bus.publish(GameOver{ .reason = reason });
     }
 
@@ -455,8 +475,7 @@ namespace pong
                     .color = color, .speed = 220.0f, .life = 0.7f, .size = 5.0f,
                 });
 
-                const auto ore = static_cast<size_t>(box.material);
-                m_bus.publish(OreChanged{ .material = static_cast<uint8_t>(ore), .count = ++m_ores[ore] });
+                spawn_drop(box);
 
                 apply_box_rewards(ball, box, spawned);
                 dead.push_back(i);
@@ -488,6 +507,56 @@ namespace pong
             break;
         case BoxEffect::None:
             break;
+        }
+    }
+
+    void Game::spawn_drop(const Box& box)
+    {
+        std::uniform_real_distribution<float> spread{-DROP_SPREAD_SPEED, DROP_SPREAD_SPEED};
+
+        m_drops.push_back({
+            .rect = {
+                box.rect.x + (box.rect.w - DROP_SIZE) * 0.5f,
+                box.rect.y + (box.rect.h - DROP_SIZE) * 0.5f,
+                DROP_SIZE, DROP_SIZE,
+            },
+            .vx = spread(m_rng),
+            .vy = -DROP_POP_SPEED,
+            .material = box.material,
+        });
+    }
+
+    void Game::update_drops(float delta_time)
+    {
+        for (size_t i = 0; i < m_drops.size();)
+        {
+            auto& drop = m_drops[i];
+            drop.vy = std::min(drop.vy + DROP_GRAVITY * delta_time, DROP_MAX_FALL_SPEED);
+            drop.rect.x = std::clamp(drop.rect.x + drop.vx * delta_time, 0.0f, m_field.width - drop.rect.w);
+            drop.rect.y += drop.vy * delta_time;
+
+            float dx, dy;
+            const bool caught = overlap(drop.rect, m_paddle.rect, dx, dy);
+            if (caught)
+            {
+                const auto ore = static_cast<size_t>(drop.material);
+                m_bus.publish(OreChanged{ .material = static_cast<uint8_t>(ore), .count = ++m_ores[ore] });
+
+                m_particles.emit(m_rng, {
+                    .x = drop.rect.x + drop.rect.w * 0.5f, .y = drop.rect.y + drop.rect.h * 0.5f,
+                    .angle = -1.5707963f, .spread = 1.0f, .count = 6,
+                    .color = material_color(drop.material), .speed = 120.0f, .life = 0.4f, .size = 3.0f,
+                });
+            }
+
+            if (caught || drop.rect.y > m_field.height)
+            {
+                drop = m_drops.back();
+                m_drops.pop_back();
+                continue;
+            }
+
+            ++i;
         }
     }
 
