@@ -14,6 +14,8 @@ namespace pong
     {
         constexpr Rect BACKGROUND_PIXELS{0.0f, 0.0f, 1024.0f, 572.0f};
         constexpr float MATERIAL_TILE_SIZE = 50.0f;
+        constexpr float MATERIALS_X = 1050.0f;
+        constexpr int MATERIAL_COUNT = 6;
         constexpr int DAMAGE_STAGES = 4;
         constexpr Color WHITE{255, 255, 255, 255};
 
@@ -31,19 +33,23 @@ namespace pong
             return 1;
         }
 
-        // Material tiles sit in a row at y = 0, right after the background, in enum order.
+        // Atlas row at y = 0, left to right: materials (enum order), damage overlays, paddle (3 cells), ball (1 cell).
         Rect material_pixels(Material material)
         {
-            const float x = BACKGROUND_PIXELS.w + static_cast<float>(material) * MATERIAL_TILE_SIZE;
+            const float x = MATERIALS_X + static_cast<float>(material) * MATERIAL_TILE_SIZE;
             return {x, 0.0f, MATERIAL_TILE_SIZE, MATERIAL_TILE_SIZE};
         }
 
-        // Crack overlays follow the 6 material tiles, ordered from lightly to heavily damaged.
+        // Crack overlays follow the material tiles, ordered from lightly to heavily damaged.
         Rect damage_pixels(int stage)
         {
-            const float x = BACKGROUND_PIXELS.w + 6.0f * MATERIAL_TILE_SIZE + static_cast<float>(stage) * MATERIAL_TILE_SIZE;
+            const float x = MATERIALS_X + MATERIAL_COUNT * MATERIAL_TILE_SIZE + static_cast<float>(stage) * MATERIAL_TILE_SIZE;
             return {x, 0.0f, MATERIAL_TILE_SIZE, MATERIAL_TILE_SIZE};
         }
+
+        constexpr float DAMAGE_END_X = MATERIALS_X + (MATERIAL_COUNT + DAMAGE_STAGES) * MATERIAL_TILE_SIZE;
+        constexpr Rect PADDLE_PIXELS{DAMAGE_END_X, 0.0f, 3.0f * MATERIAL_TILE_SIZE, MATERIAL_TILE_SIZE};
+        constexpr Rect BALL_PIXELS{DAMAGE_END_X + PADDLE_PIXELS.w, 0.0f, MATERIAL_TILE_SIZE, MATERIAL_TILE_SIZE};
 
         // -1 for an undamaged box, otherwise 0..DAMAGE_STAGES-1 by the share of health lost.
         int damage_stage(const Box& box)
@@ -72,18 +78,18 @@ namespace pong
     void Game::restart()
     {
         m_paddle.rect.w = 100;
-        m_paddle.rect.h = 12;
+        m_paddle.rect.h = m_paddle.rect.w * PADDLE_PIXELS.h / PADDLE_PIXELS.w;
         m_paddle.rect.x = m_field.width / 2 - m_paddle.rect.w / 2;
-        m_paddle.rect.y = m_field.height - m_paddle.rect.h / 2 - 10;
+        m_paddle.rect.y = m_field.height - m_paddle.rect.h - 4;
 
         m_balls.clear();
         Ball ball{};
 
-        ball.x = m_field.width / 2 - 10 / 2;
-        ball.y = m_field.height / 2 - 10 / 2;
+        ball.x = m_field.width / 2 - 20 / 2;
+        ball.y = m_field.height / 2 - 20 / 2;
 
         ball.base[Stat::Damage] = 2;
-        ball.base[Stat::Size] = 10;
+        ball.base[Stat::Size] = 20;
         ball.base[Stat::Speed] = 300;
         ball.base[Stat::Health] = 1;
         ball.base[Stat::Money] = 1;
@@ -102,7 +108,7 @@ namespace pong
 
         for (const auto& ball : m_balls)
         {
-            r->fill_rect(ball.hitbox(), {255, 255, 255, 255});
+            r->fill_rect(ball.hitbox(), WHITE, 0, pixels_to_uv(BALL_PIXELS));
         }
 
         for (const auto& box : m_boxes)
@@ -116,7 +122,7 @@ namespace pong
             }
         }
 
-        r->fill_rect(m_paddle.rect, {255, 255, 255, 255});
+        r->fill_rect(m_paddle.rect, WHITE, 0, pixels_to_uv(PADDLE_PIXELS));
     }
 
     void Game::fixed_update(float delta_time)
