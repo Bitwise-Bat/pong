@@ -20,6 +20,7 @@ struct Globals { size: vec2f };
 struct RectData
 {
     rect: vec4f,
+    uv: vec4f,
     color: u32,
     texture: i32,
 };
@@ -33,6 +34,7 @@ struct VsOut
     @location(0) color: vec4f,
     @location(1) uv: vec2f,
     @location(2) @interpolate(flat) texture: i32,
+    @location(3) texture_uv: vec2f,
 };
 
 @vertex
@@ -49,6 +51,7 @@ fn vs_main(@builtin(vertex_index) index: u32) -> VsOut
     out.color = unpack4x8unorm(data.color);
     out.uv = uv;
     out.texture = data.texture;
+    out.texture_uv = data.uv.xy + uv * data.uv.zw;
     return out;
 }
 
@@ -56,7 +59,7 @@ fn vs_main(@builtin(vertex_index) index: u32) -> VsOut
 fn fs_main(in: VsOut) -> @location(0) vec4f
 {
     // Sampled unconditionally to stay in uniform control flow; texture -1 means untextured.
-    let sampled = textureSample(textures, texture_sampler, in.uv, max(in.texture, 0));
+    let sampled = textureSample(textures, texture_sampler, in.texture_uv, max(in.texture, 0));
     let border_width : f32 = 0.025;
     
     let is_border = in.uv.x < border_width || in.uv.x > (1.0 - border_width) ||
@@ -170,25 +173,15 @@ fn fs_main(in: VsOut) -> @location(0) vec4f
         const std::array<float, 4> globals{static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 0.0f};
         m_queue.WriteBuffer(m_uniform_buffer, 0, globals.data(), sizeof(globals));
 
-        // Single white layer so the binding is valid until real textures are uploaded.
         wgpu::TextureDescriptor texture_desc{};
         texture_desc.usage = wgpu::TextureUsage::TextureBinding | wgpu::TextureUsage::CopyDst;
-        texture_desc.size = {1, 1, 1};
+        texture_desc.size = {TEXTURE_SIZE, TEXTURE_SIZE, static_cast<uint32_t>(TEXTURE_LAYERS)};
         texture_desc.format = wgpu::TextureFormat::RGBA8Unorm;
         m_textures = m_device.CreateTexture(&texture_desc);
 
-        const std::array<uint8_t, 4> white{255, 255, 255, 255};
-        wgpu::TexelCopyTextureInfo destination{};
-        destination.texture = m_textures;
-        wgpu::TexelCopyBufferLayout layout{};
-        layout.bytesPerRow = 4;
-        layout.rowsPerImage = 1;
-        const wgpu::Extent3D extent{1, 1, 1};
-        m_queue.WriteTexture(&destination, white.data(), white.size(), &layout, &extent);
-
         wgpu::TextureViewDescriptor view_desc{};
         view_desc.dimension = wgpu::TextureViewDimension::e2DArray;
-        view_desc.arrayLayerCount = 1;
+        view_desc.arrayLayerCount = static_cast<uint32_t>(TEXTURE_LAYERS);
         m_textures_view = m_textures.CreateView(&view_desc);
 
         wgpu::SamplerDescriptor sampler_desc{};
@@ -197,6 +190,10 @@ fn fs_main(in: VsOut) -> @location(0) vec4f
         m_sampler = m_device.CreateSampler(&sampler_desc);
 
         ensure_capacity(INITIAL_RECT_CAPACITY);
+
+        for (const PendingUpload& upload : m_pending_uploads) write_texture(upload);
+        m_pending_uploads.clear();
+
         m_ready = true;
     }
 
@@ -254,10 +251,41 @@ fn fs_main(in: VsOut) -> @location(0) vec4f
         m_clear_color = {c.r / 255.0, c.g / 255.0, c.b / 255.0, c.a / 255.0};
     }
 
-    void WebGpuRenderer::fill_rect(const Rect& rect, Color c, int32_t texture)
+    void WebGpuRenderer::fill_rect(const Rect& rect, Color c, int32_t texture, const Rect& uv)
     {
         if (!m_ready) return;
-        m_rects.push_back({rect, c, texture});
+        m_rects.push_back({rect, uv, c, texture});
+    }
+
+    void WebGpuRenderer::upload_texture(int32_t texture, uint32_t x, uint32_t y,
+                                        uint32_t width, uint32_t height, std::span<const uint8_t> rgba)
+    {
+        P_ASSERT(texture >= 0 && texture < TEXTURE_LAYERS, "texture layer {} out of range", texture);
+        P_ASSERT(x + width <= TEXTURE_SIZE && y + height <= TEXTURE_SIZE, "texture upload exceeds the layer");
+        P_ASSERT(rgba.size() == static_cast<size_t>(width) * height * 4, "expected tightly packed RGBA8 pixels");
+
+        PendingUpload upload{texture, x, y, width, height, {rgba.begin(), rgba.end()}};
+        if (!m_ready)
+        {
+            // The device is still being requested, so keep the pixels until init_resources runs.
+            m_pending_uploads.push_back(std::move(upload));
+            return;
+        }
+        write_texture(upload);
+    }
+
+    void WebGpuRenderer::write_texture(const PendingUpload& upload)
+    {
+        wgpu::TexelCopyTextureInfo destination{};
+        destination.texture = m_textures;
+        destination.origin = {upload.x, upload.y, static_cast<uint32_t>(upload.texture)};
+
+        wgpu::TexelCopyBufferLayout layout{};
+        layout.bytesPerRow = upload.width * 4;
+        layout.rowsPerImage = upload.height;
+
+        const wgpu::Extent3D extent{upload.width, upload.height, 1};
+        m_queue.WriteTexture(&destination, upload.rgba.data(), upload.rgba.size(), &layout, &extent);
     }
 
     void WebGpuRenderer::present()
