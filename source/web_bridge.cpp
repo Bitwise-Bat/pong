@@ -9,7 +9,7 @@
 
 namespace
 {
-    AppContext* g_ctx{};
+    pong::AppContext* g_ctx{};
     emscripten::val g_on_event = emscripten::val::undefined();
     
     std::vector<pong::EventBus::Subscription> g_subs{};

@@ -1,8 +1,8 @@
 #pragma once
 
-struct AppContext;
-
 namespace pong
 {
+    struct AppContext;
+
     void bridge_attach(AppContext* ctx);
 }
