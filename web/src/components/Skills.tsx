@@ -9,31 +9,48 @@ import { ORES } from "../ores.ts";
 interface Skill {
     id: number;
     name: string;
-    description: string;
+    statName: string;
+    multiply: boolean;
     x: number;
     y: number;
     parents: number[];
     costMaterial: number;
+    level: number;
+    maxLevel: number;
+    values: number[];
     cost: number;
-    owned: boolean;
     canBuy: boolean;
 }
+
+const bonus = (skill: Skill, value: number) => `${skill.multiply ? "x" : "+"}${value} ${skill.statName}`;
 
 type SkillNode = Node<{ skill: Skill }, "skill">;
 
 const SkillCard = ({ data: { skill } }: NodeProps<SkillNode>) => {
     const { Icon, color } = ORES[skill.costMaterial];
-    const state = skill.owned
+    const maxed = skill.level >= skill.maxLevel;
+    const owned = skill.level > 0;
+    const total = skill.values.slice(0, skill.level).reduce((a, v) => skill.multiply ? a * v : a + v, skill.multiply ? 1 : 0);
+
+    const state = maxed
         ? "border-cyan-300 bg-cyan-300/20"
         : skill.canBuy
-            ? "border-white/60 bg-slate-800 hover:bg-slate-700 cursor-pointer"
-            : "border-white/15 bg-slate-900 opacity-50";
+            ? `${owned ? "border-cyan-300" : "border-white/60"} bg-slate-800 hover:bg-slate-700 cursor-pointer`
+            : owned
+                ? "border-cyan-300/60 bg-slate-900"
+                : "border-white/15 bg-slate-900 opacity-50";
 
     return <div className={`w-40 px-3 py-2 rounded-sm border text-white text-center ${state}`}>
         <Handle type="target" position={Position.Top} style={{ opacity: 0 }}/>
         <div className="font-semibold">{skill.name}</div>
-        <div className="text-xs text-white/60">{skill.description}</div>
-        {!skill.owned && <div className="mt-1 flex items-center justify-center gap-1 text-sm">
+        {skill.maxLevel > 1 && <div className="my-1 flex justify-center gap-1">
+            {skill.values.map((_, i) => <div key={i} className={`h-1.5 w-4 rounded-[1px] ${i < skill.level ? "bg-cyan-300" : "bg-white/20"}`}/>)}
+        </div>}
+        <div className="text-xs text-white/60">
+            {maxed ? bonus(skill, total) : bonus(skill, skill.values[skill.level])}
+            {owned && !maxed && <span className="text-white/35"> ({bonus(skill, total)})</span>}
+        </div>
+        {!maxed && <div className="mt-1 flex items-center justify-center gap-1 text-sm">
             <Icon size={18} color={color}/>
             {skill.cost}
         </div>}
@@ -68,7 +85,7 @@ export default ({ game, onClose }: SkillsProps) => {
         target: String(skill.id),
         type: "smoothstep",
         pathOptions: { borderRadius: 4 },
-        style: { stroke: skills[parent].owned ? "rgb(103 232 249)" : "rgb(255 255 255 / 0.25)" },
+        style: { stroke: skills[parent].level > 0 ? "rgb(103 232 249)" : "rgb(255 255 255 / 0.25)" },
     })));
 
     return <div className="absolute inset-0 bg-slate-950/95">

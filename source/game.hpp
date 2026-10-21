@@ -30,7 +30,7 @@ namespace pong
 
         [[nodiscard]] std::span<const Ball> balls() const { return m_balls; }
 
-        [[nodiscard]] bool skill_owned(size_t id) const { return m_skills_owned[id]; }
+        [[nodiscard]] uint8_t skill_level(size_t id) const { return m_skill_levels[id]; }
         [[nodiscard]] bool can_buy_skill(size_t id) const;
         bool buy_skill(size_t id);
 
@@ -64,7 +64,7 @@ namespace pong
         Particles m_particles{};
         bool m_playing{};
         std::array<uint32_t, static_cast<size_t>(Material::Count)> m_ores{};
-        std::array<bool, SKILLS.size()> m_skills_owned{};
+        std::array<uint8_t, SKILLS.size()> m_skill_levels{};
 
         EventBus m_bus{};
 

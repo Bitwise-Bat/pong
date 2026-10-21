@@ -8,29 +8,45 @@
 
 namespace pong
 {
+    inline constexpr size_t MAX_SKILL_LEVEL = 5;
+
+    struct SkillLevel
+    {
+        uint32_t cost{};
+        float value{};
+    };
+
     struct SkillDef
     {
         std::string_view name;
-        std::string_view description;
+        std::string_view stat_name; // shown after the bonus, e.g. "+2 damage"
         float x, y; // position in the skill tree view
         std::array<int8_t, 2> parents; // skill ids that must be owned first, -1 marks an unused slot
         Material cost_material;
-        uint32_t cost;
-        Modifier effect; // folded into the base stats of the starting ball
+        Stat stat;
+        Op op;
+        std::array<SkillLevel, MAX_SKILL_LEVEL> levels; // bought in order, a zero cost ends the list
+
+        [[nodiscard]] constexpr size_t max_level() const
+        {
+            size_t n = 0;
+            while (n < levels.size() && levels[n].cost > 0) ++n;
+            return n;
+        }
     };
 
     inline constexpr std::array<SkillDef, 6> SKILLS{{
-        { "Sharp Ball",  "+1 damage",   0.0f,    0.0f,   { -1, -1 }, Material::Stone,   10,
-          { .stat = Stat::Damage, .op = Op::Add, .value = 1 } },
-        { "Heavy Ball",  "Bigger ball", -200.0f, 150.0f, {  0, -1 }, Material::Stone,   25,
-          { .stat = Stat::Size,   .op = Op::Add, .value = 4 } },
-        { "Quick Ball",  "+40 speed",   200.0f,  150.0f, {  0, -1 }, Material::Iron,    10,
-          { .stat = Stat::Speed,  .op = Op::Add, .value = 40 } },
-        { "Keen Edge",   "+2 damage",   -200.0f, 300.0f, {  1, -1 }, Material::Bronze,  10,
-          { .stat = Stat::Damage, .op = Op::Add, .value = 2 } },
-        { "Fleet Ball",  "+60 speed",   200.0f,  300.0f, {  2, -1 }, Material::Silver,  10,
-          { .stat = Stat::Speed,  .op = Op::Add, .value = 60 } },
-        { "Diamond Tip", "+4 damage",   0.0f,    450.0f, {  3,  4 }, Material::Diamond, 5,
-          { .stat = Stat::Damage, .op = Op::Add, .value = 4 } },
+        { "Sharp Ball",  "damage", 0.0f,    0.0f,   { -1, -1 }, Material::Stone,   Stat::Damage, Op::Add,
+          {{ { 25, 1 }, { 50, 2 }, { 100, 3 } }} },
+        { "Heavy Ball",  "size",   -200.0f, 150.0f, {  0, -1 }, Material::Stone,   Stat::Size,   Op::Add,
+          {{ { 25, 4 }, { 50, 4 }, { 100, 6 } }} },
+        { "Quick Ball",  "speed",  200.0f,  150.0f, {  0, -1 }, Material::Iron,    Stat::Speed,  Op::Add,
+          {{ { 10, 40 }, { 20, 40 }, { 40, 60 } }} },
+        { "Keen Edge",   "damage", -200.0f, 300.0f, {  1, -1 }, Material::Bronze,  Stat::Damage, Op::Add,
+          {{ { 10, 2 }, { 20, 3 }, { 40, 4 } }} },
+        { "Fleet Ball",  "speed",  200.0f,  300.0f, {  2, -1 }, Material::Silver,  Stat::Speed,  Op::Add,
+          {{ { 10, 60 }, { 20, 80 } }} },
+        { "Diamond Tip", "damage", 0.0f,    450.0f, {  3,  4 }, Material::Diamond, Stat::Damage, Op::Add,
+          {{ { 5, 4 } }} },
     }};
 }

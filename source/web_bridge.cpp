@@ -65,13 +65,25 @@ namespace
             emscripten::val obj = emscripten::val::object();
             obj.set("id", static_cast<uint32_t>(i));
             obj.set("name", std::string(def.name));
-            obj.set("description", std::string(def.description));
+            const size_t level = g_ctx->game.skill_level(i);
+            const size_t max_level = def.max_level();
+
+            emscripten::val values = emscripten::val::array();
+            for (size_t l = 0; l < max_level; ++l)
+            {
+                values.call<void>("push", def.levels[l].value);
+            }
+
+            obj.set("statName", std::string(def.stat_name));
+            obj.set("multiply", def.op == pong::Op::Multiply);
             obj.set("x", def.x);
             obj.set("y", def.y);
             obj.set("parents", parents);
             obj.set("costMaterial", static_cast<uint8_t>(def.cost_material));
-            obj.set("cost", def.cost);
-            obj.set("owned", g_ctx->game.skill_owned(i));
+            obj.set("level", static_cast<uint32_t>(level));
+            obj.set("maxLevel", static_cast<uint32_t>(max_level));
+            obj.set("values", values);
+            obj.set("cost", level < max_level ? def.levels[level].cost : 0u);
             obj.set("canBuy", g_ctx->game.can_buy_skill(i));
 
             list.call<void>("push", obj);
