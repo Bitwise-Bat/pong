@@ -35,7 +35,7 @@ namespace pong
         }
     };
 
-    inline constexpr std::array<SkillDef, 10> SKILLS{{
+    inline constexpr std::array<SkillDef, 11> SKILLS{{
         { "Sharp Ball",  "damage", 0.0f,    0.0f,   { -1, -1 }, Material::Stone,   Stat::Damage, Op::Add,
           {{ { 25, 1 }, { 50, 2 }, { 100, 3 } }} },
         { "Heavy Ball",  "size",   -200.0f, 150.0f, {  0, -1 }, Material::Stone,   Stat::Size,   Op::Add,
@@ -56,5 +56,7 @@ namespace pong
           {{ { 10, 100 }, { 20, 50 }, { 40, 50 } }} },
         { "Streak",      "max multiplier", -400.0f, 150.0f, {  0, -1 }, Material::Stone, Stat::ComboCap, Op::Add,
           {{ { 30, 1 }, { 60, 2 }, { 120, 3 }, { 240, 3 } }} },
+        { "Grabby Hands", "cursor reach", -400.0f, 300.0f, {  9, -1 }, Material::Silver, Stat::CursorReach, Op::Add,
+          {{ { 10, 8 }, { 20, 8 }, { 40, 12 } }} },
     }};
 }

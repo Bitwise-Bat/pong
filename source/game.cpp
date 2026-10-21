@@ -132,10 +132,11 @@ namespace pong
         m_paddle.stats[Stat::PaddleSpeed] = PADDLE_SPEED;
         apply_skills(m_paddle.stats);
 
-        Stats combo{};
-        combo[Stat::ComboCap] = 1.0f;
-        apply_skills(combo);
-        m_combo_cap = std::clamp(static_cast<uint32_t>(combo[Stat::ComboCap]), 1u, MAX_COMBO);
+        Stats extra{};
+        extra[Stat::ComboCap] = 1.0f;
+        apply_skills(extra);
+        m_combo_cap = std::clamp(static_cast<uint32_t>(extra[Stat::ComboCap]), 1u, MAX_COMBO);
+        m_cursor_reach = extra[Stat::CursorReach];
 
         m_paddle.rect.y = m_field.height - 4 - (m_paddle.height + m_paddle.rect.h) / 2;
 
@@ -572,6 +573,16 @@ namespace pong
         m_bus.publish(ComboChanged{ .multiplier = best });
     }
 
+    // True when the cursor is within the bought reach of the rect's nearest point.
+    bool Game::grabbed_by_cursor(const Rect& rect) const
+    {
+        if (!m_pointer_valid || m_cursor_reach <= 0.0f) return false;
+
+        const float x = std::clamp(m_pointer_x, rect.x, rect.x + rect.w) - m_pointer_x;
+        const float y = std::clamp(m_pointer_y, rect.y, rect.y + rect.h) - m_pointer_y;
+        return x * x + y * y <= m_cursor_reach * m_cursor_reach;
+    }
+
     void Game::update_drops(float delta_time)
     {
         for (size_t i = 0; i < m_drops.size();)
@@ -582,7 +593,7 @@ namespace pong
             drop.rect.y += drop.vy * delta_time;
 
             float dx, dy;
-            const bool caught = overlap(drop.rect, m_paddle.rect, dx, dy);
+            const bool caught = overlap(drop.rect, m_paddle.rect, dx, dy) || grabbed_by_cursor(drop.rect);
             if (caught)
             {
                 const auto ore = static_cast<size_t>(drop.material);

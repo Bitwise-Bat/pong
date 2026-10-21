@@ -54,6 +54,10 @@ namespace pong
         [[nodiscard]] bool can_buy_skill(size_t id) const;
         bool buy_skill(size_t id);
 
+        // Cursor position as a 0..1 share of the field, used to grab drops once Grabby Hands is bought.
+        void set_pointer(float u, float v) { m_pointer_x = u * m_field.width; m_pointer_y = v * m_field.height; m_pointer_valid = true; }
+        void clear_pointer() { m_pointer_valid = false; }
+
     private:
         std::mt19937 m_rng{ std::random_device{}() };
         std::discrete_distribution<uint8_t> m_buffPick{ 98, 1, 1 };
@@ -75,6 +79,7 @@ namespace pong
         void spawn_drop(const Box& box, uint32_t amount);
         void publish_combo(bool force);
         void update_drops(float delta_time);
+        [[nodiscard]] bool grabbed_by_cursor(const Rect& rect) const;
         void generate_boxes();
         void apply_skills(Stats& stats) const;
         void publish_time(bool force);
@@ -93,6 +98,9 @@ namespace pong
         float m_time_left{};
         uint32_t m_combo_shown{};
         uint32_t m_combo_cap{1};
+        float m_cursor_reach{};
+        float m_pointer_x{}, m_pointer_y{};
+        bool m_pointer_valid{};
         uint32_t m_time_shown{};
         std::array<uint32_t, static_cast<size_t>(Material::Count)> m_ores{};
         std::array<uint8_t, SKILLS.size()> m_skill_levels{};

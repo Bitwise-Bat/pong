@@ -140,6 +140,15 @@ namespace
         g_ctx->save.save();
     }
 
+    // u and v are the cursor position as a 0..1 share of the canvas; anything outside clears it.
+    void bridge_set_pointer(float u, float v)
+    {
+        if (!g_ctx) return;
+
+        if (u < 0.0f || u > 1.0f || v < 0.0f || v > 1.0f) g_ctx->game.clear_pointer();
+        else g_ctx->game.set_pointer(u, v);
+    }
+
     void bridge_start_game()
     {
         if (g_ctx) g_ctx->game.start();
@@ -183,4 +192,5 @@ EMSCRIPTEN_BINDINGS(pong)
     emscripten::function("buySkill", &bridge_buy_skill);
     emscripten::function("getVolumes", &bridge_get_volumes);
     emscripten::function("setVolume", &bridge_set_volume);
+    emscripten::function("setPointer", &bridge_set_pointer);
 }
