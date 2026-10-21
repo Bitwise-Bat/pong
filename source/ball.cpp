@@ -1,11 +1,14 @@
 #include "ball.hpp"
 
+#include "log.hpp"
+
 namespace pong
 {
     void Ball::update(float delta_time)
     {
-        rect.y += delta_time * vy * speed;
-        rect.x += delta_time * vx * speed;
+        const auto& stat = stats();
+        y += delta_time * vy * stat[Stat::Speed];
+        x += delta_time * vx * stat[Stat::Speed];
     }
 
     void Ball::bounce_x()

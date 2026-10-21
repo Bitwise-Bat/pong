@@ -1,29 +1,56 @@
 #pragma once
 
+#include <cstdint>
+#include <random>
+#include <span>
+#include <vector>
+
 #include "ball.hpp"
+#include "box.hpp"
+#include "event_bus.hpp"
 #include "field.hpp"
 #include "input.hpp"
 #include "paddle.hpp"
 #include "renderer/renderer.hpp"
-
-#include <vector>
-#include <span>
 
 namespace pong
 {
     class Game
     {
     public:
+        EventBus& events() { return m_bus; }
         void update(float delta_time);
         void restart();
         void render(Renderer* r);
-        
-        std::span<const Ball> balls() { return m_balls; }
-    
+
+        std::span<const Ball> balls() const { return m_balls; }
+
+    private:
+        std::mt19937 m_rng{ std::random_device{}() };
+        std::discrete_distribution<uint8_t> m_buffPick{ 70, 25, 25 };
+
+        BoxEffect roll_buff() { return static_cast<BoxEffect>(m_buffPick(m_rng)); }
+
+        void update_paddle(float delta_time);
+        void update_balls(float delta_time);
+
+        void collide_ball_walls(Ball& ball) const;
+        void collide_ball_paddle(Ball& ball) const;
+        void collide_balls_boxes();
+        void collide_balls_balls();
+
+        void apply_box_rewards(Ball& ball, const Box& box, std::vector<Ball>& spawned);
+        void generate_boxes();
+
     private:
         Paddle m_paddle{};
         std::vector<Ball> m_balls{};
         Input m_input{};
         Field m_field{};
+        uint32_t m_score{};
+
+        EventBus m_bus{};
+
+        std::vector<Box> m_boxes{};
     };
 }
