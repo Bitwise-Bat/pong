@@ -81,6 +81,7 @@ namespace pong
         void publish_combo(bool force);
         void update_drops(float delta_time);
         [[nodiscard]] bool grabbed_by_cursor(const Rect& rect) const;
+        void collect_drop(const Drop& drop);
         void generate_boxes();
         void apply_skills(Stats& stats) const;
         void publish_time(bool force);
@@ -100,6 +101,7 @@ namespace pong
         uint32_t m_combo_shown{};
         uint32_t m_combo_cap{1};
         float m_cursor_reach{};
+        float m_auto_catch{}; // 0..1
         float m_pointer_x{}, m_pointer_y{};
         bool m_pointer_valid{};
         uint32_t m_time_shown{};

@@ -141,6 +141,7 @@ namespace pong
         apply_skills(extra);
         m_combo_cap = std::clamp(static_cast<uint32_t>(extra[Stat::ComboCap]), 1u, MAX_COMBO);
         m_cursor_reach = extra[Stat::CursorReach];
+        m_auto_catch = std::clamp(extra[Stat::AutoCatch] / 100.0f, 0.0f, 1.0f);
 
         m_paddle.rect.y = m_field.height - 4 - (m_paddle.height + m_paddle.rect.h) / 2;
 
@@ -591,6 +592,19 @@ namespace pong
         return x * x + y * y <= m_cursor_reach * m_cursor_reach;
     }
 
+    void Game::collect_drop(const Drop& drop)
+    {
+        m_money += material_value(drop.material) * drop.amount;
+        m_bus.publish(MoneyChanged{ .amount = m_money });
+
+        // Missed drops are below the field, so their burst is pulled up to the bottom edge.
+        m_particles.emit(m_rng, {
+            .x = drop.rect.x + drop.rect.w * 0.5f, .y = std::min(drop.rect.y + drop.rect.h * 0.5f, m_field.height),
+            .angle = -1.5707963f, .spread = 1.0f, .count = 6,
+            .color = material_color(drop.material), .speed = 120.0f, .life = 0.4f, .size = 3.0f,
+        });
+    }
+
     void Game::update_drops(float delta_time)
     {
         for (size_t i = 0; i < m_drops.size();)
@@ -602,19 +616,15 @@ namespace pong
 
             float dx, dy;
             const bool caught = overlap(drop.rect, m_paddle.rect, dx, dy) || grabbed_by_cursor(drop.rect);
-            if (caught)
-            {
-                m_money += material_value(drop.material) * drop.amount;
-                m_bus.publish(MoneyChanged{ .amount = m_money });
+            const bool missed = !caught && drop.rect.y > m_field.height;
 
-                m_particles.emit(m_rng, {
-                    .x = drop.rect.x + drop.rect.w * 0.5f, .y = drop.rect.y + drop.rect.h * 0.5f,
-                    .angle = -1.5707963f, .spread = 1.0f, .count = 6,
-                    .color = material_color(drop.material), .speed = 120.0f, .life = 0.4f, .size = 3.0f,
-                });
+            // Safety Net rolls once, when the drop leaves the field.
+            if (caught || (missed && std::uniform_real_distribution<float>{0.0f, 1.0f}(m_rng) < m_auto_catch))
+            {
+                collect_drop(drop);
             }
 
-            if (caught || drop.rect.y > m_field.height)
+            if (caught || missed)
             {
                 drop = m_drops.back();
                 m_drops.pop_back();

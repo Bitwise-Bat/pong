@@ -33,7 +33,7 @@ namespace pong
         }
     };
 
-    inline constexpr std::array<SkillDef, 11> SKILLS{
+    inline constexpr std::array<SkillDef, 12> SKILLS{
         {
             {
                 "Sharp Ball", "damage", 0.0f, 0.0f, {-1, -1}, Stat::Damage, Op::Add,
@@ -78,6 +78,10 @@ namespace pong
             {
                 "Grabby Hands", "cursor reach", -400.0f, 300.0f, {9, -1}, Stat::CursorReach, Op::Add,
                 {{{120, 8}, {240, 8}, {480, 12}}}
+            },
+            {
+                "Safety Net", "% auto catch", -400.0f, 450.0f, {10, -1}, Stat::AutoCatch, Op::Add,
+                {{{150, 10}, {300, 10}, {600, 15}}}
             },
         }
     };

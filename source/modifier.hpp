@@ -5,8 +5,9 @@
 namespace pong
 {
     // Damage..Bounds belong to the ball, Time is the round length, PaddleSpeed and Sprint belong to the paddle,
-    // ComboCap is the highest money multiplier a streak can reach, CursorReach the radius for grabbing drops with the cursor.
-    enum class Stat : uint8_t { Damage, Health, Speed, Size, Bounds, Time, PaddleSpeed, Sprint, ComboCap, CursorReach, Count };
+    // ComboCap is the highest money multiplier a streak can reach, CursorReach the radius for grabbing drops with the cursor,
+    // AutoCatch the percent chance that a missed drop is still collected.
+    enum class Stat : uint8_t { Damage, Health, Speed, Size, Bounds, Time, PaddleSpeed, Sprint, ComboCap, CursorReach, AutoCatch, Count };
     enum class Op : uint8_t { Add, Multiply };
     
     struct Modifier
