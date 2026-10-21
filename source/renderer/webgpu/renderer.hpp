@@ -13,7 +13,8 @@ namespace pong
         WebGpuRenderer(uint32_t width, uint32_t height);
 
         void clear(Color c) override;
-        void fill_rect(const Rect& rect, Color c) override;
+        using Renderer::fill_rect;
+        void fill_rect(const Rect& rect, Color c, int32_t texture) override;
         void present();
 
         [[nodiscard]] bool ready() const { return m_ready; }
@@ -23,6 +24,7 @@ namespace pong
         {
             Rect rect;
             Color color;
+            int32_t texture;
         };
 
         void request_device(wgpu::Adapter adapter);
@@ -42,6 +44,9 @@ namespace pong
 
         wgpu::RenderPipeline m_pipeline{};
         wgpu::Buffer m_uniform_buffer{};
+        wgpu::Texture m_textures{};
+        wgpu::TextureView m_textures_view{};
+        wgpu::Sampler m_sampler{};
         wgpu::BindGroup m_bind_group{};
         wgpu::Buffer m_rect_buffer{};
         wgpu::Buffer m_index_buffer{};

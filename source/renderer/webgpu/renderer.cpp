@@ -21,14 +21,18 @@ struct RectData
 {
     rect: vec4f,
     color: u32,
+    texture: i32,
 };
 @group(0) @binding(1) var<storage, read> rects: array<RectData>;
+@group(0) @binding(2) var textures: texture_2d_array<f32>;
+@group(0) @binding(3) var texture_sampler: sampler;
 
 struct VsOut
 {
     @builtin(position) position: vec4f,
     @location(0) color: vec4f,
     @location(1) uv: vec2f,
+    @location(2) @interpolate(flat) texture: i32,
 };
 
 @vertex
@@ -44,12 +48,15 @@ fn vs_main(@builtin(vertex_index) index: u32) -> VsOut
     out.position = vec4f(ndc, 0.0, 1.0);
     out.color = unpack4x8unorm(data.color);
     out.uv = uv;
+    out.texture = data.texture;
     return out;
 }
 
 @fragment
 fn fs_main(in: VsOut) -> @location(0) vec4f
 {
+    // Sampled unconditionally to stay in uniform control flow; texture -1 means untextured.
+    let sampled = textureSample(textures, texture_sampler, in.uv, max(in.texture, 0));
     let border_width : f32 = 0.025;
     
     let is_border = in.uv.x < border_width || in.uv.x > (1.0 - border_width) ||
@@ -60,7 +67,12 @@ fn fs_main(in: VsOut) -> @location(0) vec4f
         return vec4f(0, 0, 0, 1);
     }
 
-    return in.color;
+    if (in.texture < 0)
+    {
+        return in.color;
+    }
+
+    return in.color * sampled;
 }
 )";
     }
@@ -158,6 +170,32 @@ fn fs_main(in: VsOut) -> @location(0) vec4f
         const std::array<float, 4> globals{static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 0.0f};
         m_queue.WriteBuffer(m_uniform_buffer, 0, globals.data(), sizeof(globals));
 
+        // Single white layer so the binding is valid until real textures are uploaded.
+        wgpu::TextureDescriptor texture_desc{};
+        texture_desc.usage = wgpu::TextureUsage::TextureBinding | wgpu::TextureUsage::CopyDst;
+        texture_desc.size = {1, 1, 1};
+        texture_desc.format = wgpu::TextureFormat::RGBA8Unorm;
+        m_textures = m_device.CreateTexture(&texture_desc);
+
+        const std::array<uint8_t, 4> white{255, 255, 255, 255};
+        wgpu::TexelCopyTextureInfo destination{};
+        destination.texture = m_textures;
+        wgpu::TexelCopyBufferLayout layout{};
+        layout.bytesPerRow = 4;
+        layout.rowsPerImage = 1;
+        const wgpu::Extent3D extent{1, 1, 1};
+        m_queue.WriteTexture(&destination, white.data(), white.size(), &layout, &extent);
+
+        wgpu::TextureViewDescriptor view_desc{};
+        view_desc.dimension = wgpu::TextureViewDimension::e2DArray;
+        view_desc.arrayLayerCount = 1;
+        m_textures_view = m_textures.CreateView(&view_desc);
+
+        wgpu::SamplerDescriptor sampler_desc{};
+        sampler_desc.magFilter = wgpu::FilterMode::Nearest;
+        sampler_desc.minFilter = wgpu::FilterMode::Nearest;
+        m_sampler = m_device.CreateSampler(&sampler_desc);
+
         ensure_capacity(INITIAL_RECT_CAPACITY);
         m_ready = true;
     }
@@ -174,13 +212,17 @@ fn fs_main(in: VsOut) -> @location(0) vec4f
         rect_desc.size = capacity * sizeof(RectData);
         m_rect_buffer = m_device.CreateBuffer(&rect_desc);
 
-        std::array<wgpu::BindGroupEntry, 2> entries{};
+        std::array<wgpu::BindGroupEntry, 4> entries{};
         entries[0].binding = 0;
         entries[0].buffer = m_uniform_buffer;
         entries[0].size = 16;
         entries[1].binding = 1;
         entries[1].buffer = m_rect_buffer;
         entries[1].size = rect_desc.size;
+        entries[2].binding = 2;
+        entries[2].textureView = m_textures_view;
+        entries[3].binding = 3;
+        entries[3].sampler = m_sampler;
 
         wgpu::BindGroupDescriptor bind_group_desc{};
         bind_group_desc.layout = m_pipeline.GetBindGroupLayout(0);
@@ -212,10 +254,10 @@ fn fs_main(in: VsOut) -> @location(0) vec4f
         m_clear_color = {c.r / 255.0, c.g / 255.0, c.b / 255.0, c.a / 255.0};
     }
 
-    void WebGpuRenderer::fill_rect(const Rect& rect, Color c)
+    void WebGpuRenderer::fill_rect(const Rect& rect, Color c, int32_t texture)
     {
         if (!m_ready) return;
-        m_rects.push_back({rect, c});
+        m_rects.push_back({rect, c, texture});
     }
 
     void WebGpuRenderer::present()
