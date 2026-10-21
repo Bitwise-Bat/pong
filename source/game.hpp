@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <random>
@@ -41,6 +42,14 @@ namespace pong
         [[nodiscard]] std::span<const Ball> balls() const { return m_balls; }
 
         [[nodiscard]] uint8_t skill_level(size_t id) const { return m_skill_levels[id]; }
+        [[nodiscard]] uint32_t ore(size_t material) const { return m_ores[material]; }
+
+        // Used when restoring a save; levels above the skill's maximum are clamped.
+        void set_ore(size_t material, uint32_t count) { m_ores[material] = count; }
+        void set_skill_level(size_t id, uint32_t level)
+        {
+            m_skill_levels[id] = static_cast<uint8_t>(std::min<size_t>(level, SKILLS[id].max_level()));
+        }
         [[nodiscard]] bool can_buy_skill(size_t id) const;
         bool buy_skill(size_t id);
 

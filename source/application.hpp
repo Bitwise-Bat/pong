@@ -4,6 +4,7 @@
 
 #include "audio.hpp"
 #include "game.hpp"
+#include "save.hpp"
 #include "renderer/webgpu/renderer.hpp"
 
 namespace pong
@@ -22,6 +23,7 @@ namespace pong
         std::unique_ptr<WebGpuRenderer> renderer{};
         Game game{};
         Audio audio{};
+        Save save{};
         float last_ms{};
         float accumulator{};
     };

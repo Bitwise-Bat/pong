@@ -117,6 +117,13 @@ namespace
     void bridge_on_event(emscripten::val cb)
     {
         g_on_event = cb;
+        if (!g_ctx) return;
+
+        // The ores restored from the save were published before JS was listening.
+        for (size_t i = 0; i < static_cast<size_t>(pong::Material::Count); ++i)
+        {
+            on_ore_changed({ .material = static_cast<uint8_t>(i), .count = g_ctx->game.ore(i) });
+        }
     }
 
     void bridge_clear_event()
