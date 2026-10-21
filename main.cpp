@@ -56,13 +56,15 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 
     auto app = std::make_unique<pong::AppContext>();
 
-    P_ASSERT(SDL_Init(SDL_INIT_VIDEO));
+    P_ASSERT(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO));
 
     app->window.reset(SDL_CreateWindow("Pong", 960, 540, 0));
     P_SDL_ASSERT(app->window.get() != nullptr);
 
     app->renderer = std::make_unique<pong::WebGpuRenderer>(960, 540);
     upload_atlas(*app->renderer);
+
+    app->audio.init(app->game.events());
 
     app->game.restart();
     app->last_ms = static_cast<float>(SDL_GetTicksNS()) / 1.0e6f;

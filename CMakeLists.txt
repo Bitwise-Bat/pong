@@ -43,6 +43,7 @@ target_sources(pong
         PRIVATE
         source/renderer/webgpu/renderer.cpp
             source/paddle.cpp
+            source/audio.cpp
             source/input.cpp
             source/ball.cpp
             source/particles.cpp

@@ -319,8 +319,12 @@ namespace pong
                     .color = color, .speed = 160.0f, .life = 0.35f, .size = 3.0f,
                 });
 
+                m_bus.publish(BoxHit{});
+
                 box.hit(static_cast<uint16_t>(stats[Stat::Damage]));
                 if (!box.dead()) continue;
+
+                m_bus.publish(BoxDestroyed{});
 
                 m_particles.emit(m_rng, {
                     .x = box.rect.x + box.rect.w * 0.5f, .y = box.rect.y + box.rect.h * 0.5f,

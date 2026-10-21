@@ -18,4 +18,8 @@ namespace pong
     {
         uint32_t money{};
     };
+
+    struct BoxHit {};
+
+    struct BoxDestroyed {};
 }

@@ -2,6 +2,7 @@
 #include <memory>
 #include <SDL3/SDL_video.h>
 
+#include "audio.hpp"
 #include "game.hpp"
 #include "renderer/webgpu/renderer.hpp"
 
@@ -20,6 +21,7 @@ namespace pong
         WindowPtr window{};
         std::unique_ptr<WebGpuRenderer> renderer{};
         Game game{};
+        Audio audio{};
         float last_ms{};
         float accumulator{};
     };
