@@ -14,6 +14,8 @@ namespace pong
     {
         constexpr Rect BACKGROUND_PIXELS{0.0f, 0.0f, 1024.0f, 572.0f};
         constexpr float MATERIAL_TILE_SIZE = 50.0f;
+        constexpr int DAMAGE_STAGES = 4;
+        constexpr Color WHITE{255, 255, 255, 255};
 
         uint16_t material_health(Material material)
         {
@@ -34,6 +36,22 @@ namespace pong
         {
             const float x = BACKGROUND_PIXELS.w + static_cast<float>(material) * MATERIAL_TILE_SIZE;
             return {x, 0.0f, MATERIAL_TILE_SIZE, MATERIAL_TILE_SIZE};
+        }
+
+        // Crack overlays follow the 6 material tiles, ordered from lightly to heavily damaged.
+        Rect damage_pixels(int stage)
+        {
+            const float x = BACKGROUND_PIXELS.w + 6.0f * MATERIAL_TILE_SIZE + static_cast<float>(stage) * MATERIAL_TILE_SIZE;
+            return {x, 0.0f, MATERIAL_TILE_SIZE, MATERIAL_TILE_SIZE};
+        }
+
+        // -1 for an undamaged box, otherwise 0..DAMAGE_STAGES-1 by the share of health lost.
+        int damage_stage(const Box& box)
+        {
+            if (box.health >= box.max_health) return -1;
+
+            const float lost = 1.0f - static_cast<float>(box.health) / static_cast<float>(box.max_health);
+            return std::min(DAMAGE_STAGES - 1, static_cast<int>(lost * DAMAGE_STAGES));
         }
 
         void resolve_overlap(Ball& ball, float dx, float dy)
@@ -89,7 +107,13 @@ namespace pong
 
         for (const auto& box : m_boxes)
         {
-            r->fill_rect(box.rect, box.color(), 0, pixels_to_uv(material_pixels(box.material)));
+            r->fill_rect(box.rect, WHITE, 0, pixels_to_uv(material_pixels(box.material)));
+
+            const int stage = damage_stage(box);
+            if (stage >= 0)
+            {
+                r->fill_rect(box.rect, WHITE, 0, pixels_to_uv(damage_pixels(stage)));
+            }
         }
 
         r->fill_rect(m_paddle.rect, {255, 255, 255, 255});
@@ -300,7 +324,6 @@ namespace pong
                 Box box{};
 
                 box.rect = { static_cast<float>(x) * cell, static_cast<float>(y) * cell, cell, cell };
-                box.base = {255, 255, 255, 255};
                 box.effect = roll_buff();
                 box.material = roll_material();
                 box.health = box.max_health = material_health(box.material);
