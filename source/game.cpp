@@ -102,6 +102,7 @@ namespace pong
         m_paddle.rect.y = m_field.height - 4 - (m_paddle.height + m_paddle.rect.h) / 2;
 
         m_balls.clear();
+        m_boxes.clear();
         m_particles.clear();
 
         m_ores.fill(0);
