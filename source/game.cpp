@@ -18,6 +18,8 @@ namespace pong
         constexpr int MATERIAL_COUNT = 6;
         constexpr int DAMAGE_STAGES = 4;
         constexpr Color WHITE{255, 255, 255, 255};
+        constexpr Color BLACK{0, 0, 0, 255};
+        constexpr float BOX_CELL = 40.0f;
 
         uint16_t material_health(Material material)
         {
@@ -140,8 +142,39 @@ namespace pong
             r->fill_rect(ball.visual_rect(), WHITE, 0, pixels_to_uv(BALL_PIXELS));
         }
 
+        // A box shows its material only when an empty cell touches it; the field walls and boxes hide it.
+        const int cols = static_cast<int>(m_field.width / BOX_CELL);
+        int rows = 0;
         for (const auto& box : m_boxes)
         {
+            rows = std::max(rows, static_cast<int>(box.rect.y / BOX_CELL) + 1);
+        }
+
+        std::vector<bool> occupied(static_cast<size_t>(cols * rows), false);
+        for (const auto& box : m_boxes)
+        {
+            const int x = static_cast<int>(box.rect.x / BOX_CELL);
+            const int y = static_cast<int>(box.rect.y / BOX_CELL);
+            occupied[static_cast<size_t>(y * cols + x)] = true;
+        }
+
+        const auto solid = [&](int x, int y)
+        {
+            if (x < 0 || x >= cols || y < 0) return true;
+            if (y >= rows) return false;
+            return static_cast<bool>(occupied[static_cast<size_t>(y * cols + x)]);
+        };
+
+        for (const auto& box : m_boxes)
+        {
+            const int x = static_cast<int>(box.rect.x / BOX_CELL);
+            const int y = static_cast<int>(box.rect.y / BOX_CELL);
+            if (solid(x - 1, y) && solid(x + 1, y) && solid(x, y - 1) && solid(x, y + 1))
+            {
+                r->fill_rect(box.rect, BLACK);
+                continue;
+            }
+
             r->fill_rect(box.rect, WHITE, 0, pixels_to_uv(material_pixels(box.material)));
 
             const int stage = damage_stage(box);
@@ -394,8 +427,7 @@ namespace pong
     void Game::generate_boxes()
     {
         constexpr size_t rows = 5;
-        constexpr float cell = 40.0f;
-        const size_t cols = static_cast<size_t>(m_field.width / cell);
+        const size_t cols = static_cast<size_t>(m_field.width / BOX_CELL);
 
         for (size_t y = 0; y < rows; ++y)
         {
@@ -403,7 +435,7 @@ namespace pong
             {
                 Box box{};
 
-                box.rect = { static_cast<float>(x) * cell, static_cast<float>(y) * cell, cell, cell };
+                box.rect = { static_cast<float>(x) * BOX_CELL, static_cast<float>(y) * BOX_CELL, BOX_CELL, BOX_CELL };
                 box.effect = roll_buff();
                 box.material = roll_material();
                 box.health = box.max_health = material_health(box.material);
