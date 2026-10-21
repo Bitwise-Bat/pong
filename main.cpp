@@ -27,8 +27,6 @@ namespace
         ::pong::fatal_impl(std::format("{} {}:{} (SDL: {})",
                                        cond, file, line, sdl_err));
     }
-    
-    
 }
 
 #define P_SDL_ASSERT(cond, ...) \
@@ -37,22 +35,22 @@ namespace
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 {
     // SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, "#canvas");
-    
+
     auto app = std::make_unique<AppContext>();
 
     P_ASSERT(SDL_Init(SDL_INIT_VIDEO));
 
     app->window.reset(SDL_CreateWindow("Pong", 800, 600, 0));
     P_SDL_ASSERT(app->window.get() != nullptr);
-    
+
     app->renderer = std::make_unique<pong::SdlRenderer>(app->window.get());
     app->renderer->set_logical_size(800, 600);
-    
+
     app->game.restart();
     app->last_ms = static_cast<float>(SDL_GetTicksNS()) / 1.0e6f;
 
     pong::bridge_attach(app.get());
-    
+
     *appstate = app.release();
 
     return SDL_APP_CONTINUE;
@@ -67,7 +65,7 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 {
     auto app = static_cast<AppContext*>(appstate);
     pong::SdlRenderer* renderer = app->renderer.get();
-    
+
     const float now = static_cast<float>(SDL_GetTicksNS()) / 1.0e6f;
     float frame_ms = now - app->last_ms;
     app->last_ms = now;
@@ -80,15 +78,15 @@ SDL_AppResult SDL_AppIterate(void* appstate)
         app->game.fixed_update(FIXED_UPDATE_INTERVAL);
         app->accumulator -= FIXED_UPDATE_MS;
     }
-    
+
     app->game.update(frame_ms / 1000.0f);
-    
+
     renderer->clear({10, 10, 150, 255});
-    
+
     app->game.render(renderer);
-    
+
     renderer->present();
-    
+
     return SDL_APP_CONTINUE;
 }
 
