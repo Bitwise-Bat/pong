@@ -46,8 +46,8 @@ namespace pong
                 {{{25, 4}, {50, 4}, {100, 6}}}
             },
             {
-                "Quick Ball", "speed", 200.0f, 150.0f, {0, -1}, Material::Iron, Stat::Speed, Op::Add,
-                {{{10, 40}, {20, 40}, {40, 60}}}
+                "Slow Ball", "speed", 200.0f, 150.0f, {0, -1}, Material::Iron, Stat::Speed, Op::Add,
+                {{{10, -30}, {20, -30}, {40, -40}}}
             },
             {
                 "Keen Edge", "damage", -200.0f, 300.0f, {1, -1}, Material::Bronze, Stat::Damage, Op::Add,

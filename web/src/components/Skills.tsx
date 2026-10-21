@@ -22,7 +22,7 @@ interface Skill {
     canBuy: boolean;
 }
 
-const bonus = (skill: Skill, value: number) => `${skill.multiply ? "x" : "+"}${value} ${skill.statName}`;
+const bonus = (skill: Skill, value: number) => `${skill.multiply ? "x" : value < 0 ? "" : "+"}${value} ${skill.statName}`;
 
 type SkillNode = Node<{ skill: Skill }, "skill">;
 
