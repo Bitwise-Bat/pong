@@ -24,6 +24,7 @@ if (EMSCRIPTEN)
     target_compile_options(pong PRIVATE "--use-port=emdawnwebgpu")
     target_link_options(pong PRIVATE
             "-sWASM=1"
+            "-sALLOW_MEMORY_GROWTH=1"
             "-sMODULARIZE=1"
             "-sEXPORT_ES6=1"
             "-sEXPORT_NAME=createPong"
