@@ -18,6 +18,8 @@ namespace
     constexpr float FIXED_UPDATE_INTERVAL = FIXED_UPDATE_MS / 1000.0f;
     constexpr float MAX_FRAME_MS = 250.0f;
 
+    using SurfacePtr = std::unique_ptr<SDL_Surface, pong::SdlDeleter<SDL_DestroySurface>>;
+
     template <class... Args>
     [[noreturn]] void sdl_fatal(
         std::string_view cond, std::string_view file,
@@ -32,6 +34,22 @@ namespace
 #define P_SDL_ASSERT(cond, ...) \
     do { if(!(cond)) ::sdl_fatal(#cond, __FILE__, __LINE__ __VA_OPT__(,) __VA_ARGS__); } while(0)
 
+namespace
+{
+    void upload_atlas(pong::WebGpuRenderer& renderer)
+    {
+        SurfacePtr loaded{SDL_LoadPNG("/assets/textures/atlas.png")};
+        P_SDL_ASSERT(loaded != nullptr);
+
+        SurfacePtr rgba{SDL_ConvertSurface(loaded.get(), SDL_PIXELFORMAT_RGBA32)};
+        P_SDL_ASSERT(rgba != nullptr);
+        P_ASSERT(rgba->pitch == rgba->w * 4, "atlas rows are not tightly packed");
+
+        const auto pixels = std::span(static_cast<const uint8_t*>(rgba->pixels), static_cast<size_t>(rgba->h) * rgba->pitch);
+        renderer.upload_texture(0, 0, 0, rgba->w, rgba->h, pixels);
+    }
+}
+
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 {
     // SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, "#canvas");
@@ -44,6 +62,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     P_SDL_ASSERT(app->window.get() != nullptr);
 
     app->renderer = std::make_unique<pong::WebGpuRenderer>(800, 600);
+    upload_atlas(*app->renderer);
 
     app->game.restart();
     app->last_ms = static_cast<float>(SDL_GetTicksNS()) / 1.0e6f;
