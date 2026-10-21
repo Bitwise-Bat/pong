@@ -15,6 +15,9 @@ add_executable(pong main.cpp)
 target_link_libraries(pong PRIVATE SDL3::SDL3)
 target_link_libraries(pong PRIVATE glm::glm)
 
+set(ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets")
+file(GLOB_RECURSE ASSET_FILES CONFIGURE_DEPENDS "${ASSETS_DIR}/*")
+
 if (EMSCRIPTEN)
     set_target_properties(pong PROPERTIES SUFFIX ".js")
     
@@ -27,7 +30,9 @@ if (EMSCRIPTEN)
             "--emit-tsd=${CMAKE_CURRENT_SOURCE_DIR}/web/src/wasm/pong.d.ts"
             "--bind"
             "--use-port=emdawnwebgpu"
+            "--embed-file=${ASSETS_DIR}@/assets"
     )
+    set_property(TARGET pong APPEND PROPERTY LINK_DEPENDS ${ASSET_FILES})
 else()
     message(FATAL_ERROR "Pong only supports WebAssembly/Web builds.")
 endif ()
