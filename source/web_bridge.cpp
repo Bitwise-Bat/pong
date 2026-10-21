@@ -26,13 +26,13 @@ void on_ball_changed(const pong::BallChanged& event)
     g_on_event(obj);
 }
 
-void on_score_changed(const pong::ScoreChanged& event)
+void on_score_changed(const pong::MoneyChanged& event)
 {
     if (g_on_event.isUndefined()) return;
     
     emscripten::val obj = emscripten::val::object();
-    obj.set("type", "score");
-    obj.set("score", event.score);
+    obj.set("type", "money");
+    obj.set("money", event.money);
     
     g_on_event(obj);
 }
@@ -42,7 +42,7 @@ void pong::bridge_attach(AppContext* ctx)
     g_ctx = ctx;
     
     g_subs.push_back(g_ctx->game.events().subscribe<BallChanged>(&on_ball_changed));
-    g_subs.push_back(g_ctx->game.events().subscribe<ScoreChanged>(&on_score_changed));
+    g_subs.push_back(g_ctx->game.events().subscribe<MoneyChanged>(&on_score_changed));
 }
 
 void bridge_on_event(emscripten::val cb)

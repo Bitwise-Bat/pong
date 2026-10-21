@@ -178,7 +178,7 @@ namespace pong
                 if (box.dead())
                 {
                     m_score += static_cast<uint8_t>(stats[Stat::Money]);
-                    m_bus.publish(ScoreChanged{ .score = m_score });
+                    m_bus.publish(MoneyChanged{ .money = m_score });
 
                     apply_box_rewards(ball, box, spawned);
 

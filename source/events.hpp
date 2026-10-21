@@ -8,8 +8,8 @@ namespace pong
         uint32_t count{};
     };
     
-    struct ScoreChanged
+    struct MoneyChanged
     {
-        uint32_t score{};
+        uint32_t money{};
     };
 }
