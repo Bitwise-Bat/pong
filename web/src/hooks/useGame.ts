@@ -1,5 +1,6 @@
 import createPong, {type MainModule} from "../wasm/pong.js"
 import {useEffect, useRef, useState} from "react";
+import {emit, type PongEvent} from "../events.ts";
 
 let gamePromise : Promise<MainModule> | null = null;
 
@@ -18,7 +19,10 @@ export default () => {
         });
 
         gamePromise.then(mo => {
-            if (active) setGame(mo);
+            if (!active) return;
+
+            setGame(mo);
+            mo.onEvent((event: PongEvent) => emit(event));
         }).catch((err) => {
             console.error(err);
         });
