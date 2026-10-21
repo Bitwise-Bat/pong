@@ -149,8 +149,14 @@ fn fs_main(in: VsOut) -> @location(0) vec4f
         module_desc.nextInChain = &wgsl;
         wgpu::ShaderModule module = m_device.CreateShaderModule(&module_desc);
 
+        // The damage overlays are partly transparent, so rects are alpha blended.
+        wgpu::BlendState blend{};
+        blend.color = {wgpu::BlendOperation::Add, wgpu::BlendFactor::SrcAlpha, wgpu::BlendFactor::OneMinusSrcAlpha};
+        blend.alpha = {wgpu::BlendOperation::Add, wgpu::BlendFactor::One, wgpu::BlendFactor::OneMinusSrcAlpha};
+
         wgpu::ColorTargetState target{};
         target.format = m_format;
+        target.blend = &blend;
 
         wgpu::FragmentState fragment{};
         fragment.module = module;
