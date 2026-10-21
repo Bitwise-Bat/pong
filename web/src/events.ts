@@ -1,5 +1,5 @@
 export type PongEvent =
-    | { type: "score";     score: number }
+    | { type: "money";     money: number }
     | { type: "life";      lives: number }
     | { type: "balls";     count: number }
     | { type: "buffStart"; buff: number; duration: number }
