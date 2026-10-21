@@ -14,14 +14,13 @@ namespace
     
     std::vector<pong::EventBus::Subscription> g_subs{};
 
-    void on_ore_changed(const pong::OreChanged& event)
+    void on_money_changed(const pong::MoneyChanged& event)
     {
         if (g_on_event.isUndefined()) return;
 
         emscripten::val obj = emscripten::val::object();
-        obj.set("type", "ore");
-        obj.set("material", event.material);
-        obj.set("count", event.count);
+        obj.set("type", "money");
+        obj.set("amount", event.amount);
 
         g_on_event(obj);
     }
@@ -102,7 +101,6 @@ namespace
             obj.set("x", def.x);
             obj.set("y", def.y);
             obj.set("parents", parents);
-            obj.set("costMaterial", static_cast<uint8_t>(def.cost_material));
             obj.set("level", static_cast<uint32_t>(level));
             obj.set("maxLevel", static_cast<uint32_t>(max_level));
             obj.set("values", values);
@@ -159,11 +157,8 @@ namespace
         g_on_event = cb;
         if (!g_ctx) return;
 
-        // The ores restored from the save were published before JS was listening.
-        for (size_t i = 0; i < static_cast<size_t>(pong::Material::Count); ++i)
-        {
-            on_ore_changed({ .material = static_cast<uint8_t>(i), .count = g_ctx->game.ore(i) });
-        }
+        // The money restored from the save was published before JS was listening.
+        on_money_changed({ .amount = g_ctx->game.money() });
     }
 
     void bridge_clear_event()
@@ -176,7 +171,7 @@ void pong::bridge_attach(AppContext* ctx)
 {
     g_ctx = ctx;
     
-    g_subs.push_back(g_ctx->game.events().subscribe<OreChanged>(&on_ore_changed));
+    g_subs.push_back(g_ctx->game.events().subscribe<MoneyChanged>(&on_money_changed));
     g_subs.push_back(g_ctx->game.events().subscribe<GameOver>(&on_game_over));
     g_subs.push_back(g_ctx->game.events().subscribe<TimeChanged>(&on_time_changed));
     g_subs.push_back(g_ctx->game.events().subscribe<ComboChanged>(&on_combo_changed));

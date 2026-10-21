@@ -30,7 +30,7 @@ namespace pong
         constexpr float DROP_POP_SPEED = 120.0f;
         constexpr uint32_t MAX_COMBO = 10;
 
-        // A box gives as many ores as the ball's combo, up to the cap bought with the Streak skill.
+        // A drop is worth its material value times the ball's combo, up to the cap bought with the Streak skill.
         uint32_t combo_multiplier(const Ball& ball, uint32_t cap)
         {
             return std::clamp(ball.combo, 1u, cap);
@@ -147,10 +147,7 @@ namespace pong
         m_combo_numbers.clear();
         m_drops.clear();
 
-        for (size_t i = 0; i < m_ores.size(); ++i)
-        {
-            m_bus.publish(OreChanged{ .material = static_cast<uint8_t>(i), .count = m_ores[i] });
-        }
+        m_bus.publish(MoneyChanged{ .amount = m_money });
 
         Ball ball{};
 
@@ -189,18 +186,17 @@ namespace pong
             if (parent >= 0 && m_skill_levels[static_cast<size_t>(parent)] == 0) return false;
         }
 
-        return m_ores[static_cast<size_t>(skill.cost_material)] >= skill.levels[level].cost;
+        return m_money >= skill.levels[level].cost;
     }
 
     bool Game::buy_skill(size_t id)
     {
         if (!can_buy_skill(id)) return false;
 
-        const auto ore = static_cast<size_t>(SKILLS[id].cost_material);
-        m_ores[ore] -= SKILLS[id].levels[m_skill_levels[id]].cost;
+        m_money -= SKILLS[id].levels[m_skill_levels[id]].cost;
         ++m_skill_levels[id];
 
-        m_bus.publish(OreChanged{ .material = static_cast<uint8_t>(ore), .count = m_ores[ore] });
+        m_bus.publish(MoneyChanged{ .amount = m_money });
         m_bus.publish(SkillBought{ .id = static_cast<uint8_t>(id) });
         return true;
     }
@@ -596,9 +592,8 @@ namespace pong
             const bool caught = overlap(drop.rect, m_paddle.rect, dx, dy) || grabbed_by_cursor(drop.rect);
             if (caught)
             {
-                const auto ore = static_cast<size_t>(drop.material);
-                m_ores[ore] += drop.amount;
-                m_bus.publish(OreChanged{ .material = static_cast<uint8_t>(ore), .count = m_ores[ore] });
+                m_money += material_value(drop.material) * drop.amount;
+                m_bus.publish(MoneyChanged{ .amount = m_money });
 
                 m_particles.emit(m_rng, {
                     .x = drop.rect.x + drop.rect.w * 0.5f, .y = drop.rect.y + drop.rect.h * 0.5f,

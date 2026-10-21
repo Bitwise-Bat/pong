@@ -7,7 +7,7 @@ namespace pong
     class Audio;
     class Game;
 
-    // Keeps ores, skill levels and volume settings in the browser's localStorage.
+    // Keeps money, skill levels and volume settings in the browser's localStorage.
     class Save
     {
     public:

@@ -3,10 +3,9 @@
 
 namespace pong
 {
-    struct OreChanged
+    struct MoneyChanged
     {
-        uint8_t material{};
-        uint32_t count{};
+        uint32_t amount{};
     };
 
     enum class GameOverReason : uint8_t { BallsLost, TimeUp };
@@ -16,7 +15,7 @@ namespace pong
         GameOverReason reason{};
     };
 
-    // The highest ore multiplier among the balls in play.
+    // The highest money multiplier among the balls in play.
     struct ComboChanged
     {
         uint32_t multiplier{};

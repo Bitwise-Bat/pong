@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <string_view>
 
-#include "box.hpp"
 #include "modifier.hpp"
 
 namespace pong
@@ -12,7 +11,7 @@ namespace pong
 
     struct SkillLevel
     {
-        uint32_t cost{};
+        uint32_t cost{}; // money
         float value{};
     };
 
@@ -22,7 +21,6 @@ namespace pong
         std::string_view stat_name; // shown after the bonus, e.g. "+2 damage"
         float x, y; // position in the skill tree view
         std::array<int8_t, 2> parents; // skill ids that must be owned first, -1 marks an unused slot
-        Material cost_material;
         Stat stat;
         Op op;
         std::array<SkillLevel, MAX_SKILL_LEVEL> levels; // bought in order, a zero cost ends the list
@@ -38,48 +36,48 @@ namespace pong
     inline constexpr std::array<SkillDef, 11> SKILLS{
         {
             {
-                "Sharp Ball", "damage", 0.0f, 0.0f, {-1, -1}, Material::Stone, Stat::Damage, Op::Add,
+                "Sharp Ball", "damage", 0.0f, 0.0f, {-1, -1}, Stat::Damage, Op::Add,
                 {{{25, 1}, {50, 2}, {100, 3}}}
             },
             {
-                "Heavy Ball", "size", -200.0f, 150.0f, {0, -1}, Material::Stone, Stat::Size, Op::Add,
+                "Heavy Ball", "size", -200.0f, 150.0f, {0, -1}, Stat::Size, Op::Add,
                 {{{25, 4}, {50, 4}, {100, 6}}}
             },
             {
-                "Slow Ball", "speed", 200.0f, 150.0f, {0, -1}, Material::Iron, Stat::Speed, Op::Add,
-                {{{10, -30}, {20, -30}, {40, -40}}}
+                "Slow Ball", "speed", 200.0f, 150.0f, {0, -1}, Stat::Speed, Op::Add,
+                {{{30, -30}, {60, -30}, {120, -40}}}
             },
             {
-                "Keen Edge", "damage", -200.0f, 300.0f, {1, -1}, Material::Bronze, Stat::Damage, Op::Add,
-                {{{10, 2}, {20, 3}, {40, 4}}}
+                "Keen Edge", "damage", -200.0f, 300.0f, {1, -1}, Stat::Damage, Op::Add,
+                {{{60, 2}, {120, 3}, {240, 4}}}
             },
             {
-                "Fleet Ball", "speed", 200.0f, 300.0f, {2, -1}, Material::Silver, Stat::Speed, Op::Add,
-                {{{10, 60}, {20, 80}}}
+                "Fleet Ball", "speed", 200.0f, 300.0f, {2, -1}, Stat::Speed, Op::Add,
+                {{{120, 60}, {240, 80}}}
             },
             {
-                "Diamond Tip", "damage", 0.0f, 450.0f, {3, 4}, Material::Diamond, Stat::Damage, Op::Add,
-                {{{5, 4}}}
+                "Diamond Tip", "damage", 0.0f, 450.0f, {3, 4}, Stat::Damage, Op::Add,
+                {{{250, 4}}}
             },
             {
-                "Extra Time", "seconds", 0.0f, 150.0f, {0, -1}, Material::Iron, Stat::Time, Op::Add,
-                {{{15, 5}, {30, 5}, {60, 10}}}
+                "Extra Time", "seconds", 0.0f, 150.0f, {0, -1}, Stat::Time, Op::Add,
+                {{{45, 5}, {90, 5}, {180, 10}}}
             },
             {
-                "Swift Paddle", "paddle speed", 400.0f, 150.0f, {0, -1}, Material::Iron, Stat::PaddleSpeed, Op::Add,
-                {{{15, 30}, {30, 30}, {60, 40}}}
+                "Swift Paddle", "paddle speed", 400.0f, 150.0f, {0, -1}, Stat::PaddleSpeed, Op::Add,
+                {{{45, 30}, {90, 30}, {180, 40}}}
             },
             {
-                "Sprint", "sprint speed", 400.0f, 300.0f, {7, -1}, Material::Bronze, Stat::Sprint, Op::Add,
-                {{{10, 100}, {20, 50}, {40, 50}}}
+                "Sprint", "sprint speed", 400.0f, 300.0f, {7, -1}, Stat::Sprint, Op::Add,
+                {{{60, 100}, {120, 50}, {240, 50}}}
             },
             {
-                "Streak", "max multiplier", -400.0f, 150.0f, {0, -1}, Material::Stone, Stat::ComboCap, Op::Add,
+                "Streak", "max multiplier", -400.0f, 150.0f, {0, -1}, Stat::ComboCap, Op::Add,
                 {{{30, 1}, {60, 2}, {120, 3}, {240, 3}}}
             },
             {
-                "Grabby Hands", "cursor reach", -400.0f, 300.0f, {9, -1}, Material::Silver, Stat::CursorReach, Op::Add,
-                {{{10, 8}, {20, 8}, {40, 12}}}
+                "Grabby Hands", "cursor reach", -400.0f, 300.0f, {9, -1}, Stat::CursorReach, Op::Add,
+                {{{120, 8}, {240, 8}, {480, 12}}}
             },
         }
     };

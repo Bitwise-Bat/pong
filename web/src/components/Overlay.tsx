@@ -1,6 +1,6 @@
 import type {MainModule} from "../wasm/pong";
 import Menu from "./Menu.tsx";
-import Ores from "./Ores.tsx";
+import Money from "./Money.tsx";
 import Timer from "./Timer.tsx";
 import Combo from "./Combo.tsx";
 
@@ -20,7 +20,7 @@ export default ({ game } : OverlayProps) => {
         onPointerLeave={() => game.setPointer(-1, -1)}
     >
         <Menu game={game}/>
-        <Ores/>
+        <Money/>
         <Timer/>
         <Combo/>
     </div>

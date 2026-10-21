@@ -20,7 +20,8 @@ namespace pong
         using emscripten::val;
 
         constexpr const char* SAVE_KEY = "pong.save";
-        constexpr int SAVE_VERSION = 1;
+        // Version 1 stored a count per ore instead of money.
+        constexpr int SAVE_VERSION = 2;
         constexpr size_t MATERIAL_COUNT = static_cast<size_t>(Material::Count);
         constexpr std::array<std::pair<const char*, Volume>, 3> VOLUME_KEYS{{
             { "main", Volume::Main }, { "music", Volume::Music }, { "sfx", Volume::Sfx },
@@ -47,12 +48,6 @@ namespace pong
     // Skills are stored by name, so adding or reordering skills keeps old saves valid.
     void Save::save() const
     {
-        val ores = val::array();
-        for (size_t i = 0; i < MATERIAL_COUNT; ++i)
-        {
-            ores.call<void>("push", m_game->ore(i));
-        }
-
         val skills = val::object();
         for (size_t i = 0; i < SKILLS.size(); ++i)
         {
@@ -68,7 +63,7 @@ namespace pong
 
         val data = val::object();
         data.set("version", SAVE_VERSION);
-        data.set("ores", ores);
+        data.set("money", m_game->money());
         data.set("skills", skills);
         data.set("volume", volume);
 
@@ -85,17 +80,32 @@ namespace pong
         if (data.isNull() || data.typeOf().as<std::string>() != "object") return;
 
         const val version = data["version"];
-        if (!version.isNumber() || version.as<int>() != SAVE_VERSION) return;
+        if (!version.isNumber()) return;
 
-        const val ores = data["ores"];
-        if (ores.isArray())
+        if (version.as<int>() == SAVE_VERSION)
         {
-            const size_t count = std::min<size_t>(ores["length"].as<uint32_t>(), MATERIAL_COUNT);
-            for (size_t i = 0; i < count; ++i)
+            const val money = data["money"];
+            if (money.isNumber()) m_game->set_money(money.as<uint32_t>());
+        }
+        else if (version.as<int>() == 1)
+        {
+            // Converts the old ores to money at their material value.
+            const val ores = data["ores"];
+            if (ores.isArray())
             {
-                const val ore = ores[static_cast<int>(i)];
-                if (ore.isNumber()) m_game->set_ore(i, ore.as<uint32_t>());
+                uint32_t money = 0;
+                const size_t count = std::min<size_t>(ores["length"].as<uint32_t>(), MATERIAL_COUNT);
+                for (size_t i = 0; i < count; ++i)
+                {
+                    const val ore = ores[static_cast<int>(i)];
+                    if (ore.isNumber()) money += ore.as<uint32_t>() * material_value(static_cast<Material>(i));
+                }
+                m_game->set_money(money);
             }
+        }
+        else
+        {
+            return;
         }
 
         const val volume = data["volume"];

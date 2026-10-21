@@ -1,6 +1,6 @@
 export type PongEvent =
     | { type: "life";      lives: number }
-    | { type: "ore";       material: number; count: number }
+    | { type: "money";     amount: number }
     | { type: "buffStart"; buff: number; duration: number }
     | { type: "buffEnd";   buff: number }
     | { type: "skill";     id: number }

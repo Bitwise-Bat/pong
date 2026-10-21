@@ -3,7 +3,8 @@ import { Handle, Position, ReactFlow, type BuiltInEdge, type Node, type NodeProp
 import "@xyflow/react/dist/style.css";
 import type { MainModule } from "../wasm/pong";
 import useEvent from "../hooks/useEvent.ts";
-import { ORES } from "../ores.ts";
+import { GiTwoCoins } from "react-icons/gi";
+import { COIN_COLOR } from "../money.ts";
 
 // Shape of the objects returned by the getSkills embind function (see web_bridge.cpp).
 interface Skill {
@@ -14,7 +15,6 @@ interface Skill {
     x: number;
     y: number;
     parents: number[];
-    costMaterial: number;
     level: number;
     maxLevel: number;
     values: number[];
@@ -27,7 +27,6 @@ const bonus = (skill: Skill, value: number) => `${skill.multiply ? "x" : value <
 type SkillNode = Node<{ skill: Skill }, "skill">;
 
 const SkillCard = ({ data: { skill } }: NodeProps<SkillNode>) => {
-    const { Icon, color } = ORES[skill.costMaterial];
     const maxed = skill.level >= skill.maxLevel;
     const owned = skill.level > 0;
     const total = skill.values.slice(0, skill.level).reduce((a, v) => skill.multiply ? a * v : a + v, skill.multiply ? 1 : 0);
@@ -51,7 +50,7 @@ const SkillCard = ({ data: { skill } }: NodeProps<SkillNode>) => {
             {owned && !maxed && <span className="text-white/35"> ({bonus(skill, total)})</span>}
         </div>
         {!maxed && <div className="mt-1 flex items-center justify-center gap-1 text-sm">
-            <Icon size={18} color={color}/>
+            <GiTwoCoins size={18} color={COIN_COLOR}/>
             {skill.cost}
         </div>}
         <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }}/>
@@ -69,7 +68,7 @@ export default ({ game, onClose }: SkillsProps) => {
     const [skills, setSkills] = useState<Skill[]>(() => game.getSkills());
     const refresh = () => setSkills(game.getSkills());
 
-    useEvent("ore", refresh);
+    useEvent("money", refresh);
     useEvent("skill", refresh);
 
     // A skill shows up only once all of its parents are owned.

@@ -27,7 +27,7 @@ namespace pong
         Rect rect{};
         float vx{}, vy{};
         Material material{};
-        uint32_t amount{1};
+        uint32_t amount{1}; // streak multiplier at the time of the break
     };
 
     class Game
@@ -43,10 +43,10 @@ namespace pong
         [[nodiscard]] std::span<const Ball> balls() const { return m_balls; }
 
         [[nodiscard]] uint8_t skill_level(size_t id) const { return m_skill_levels[id]; }
-        [[nodiscard]] uint32_t ore(size_t material) const { return m_ores[material]; }
+        [[nodiscard]] uint32_t money() const { return m_money; }
 
         // Used when restoring a save; levels above the skill's maximum are clamped.
-        void set_ore(size_t material, uint32_t count) { m_ores[material] = count; }
+        void set_money(uint32_t amount) { m_money = amount; }
         void set_skill_level(size_t id, uint32_t level)
         {
             m_skill_levels[id] = static_cast<uint8_t>(std::min<size_t>(level, SKILLS[id].max_level()));
@@ -102,7 +102,7 @@ namespace pong
         float m_pointer_x{}, m_pointer_y{};
         bool m_pointer_valid{};
         uint32_t m_time_shown{};
-        std::array<uint32_t, static_cast<size_t>(Material::Count)> m_ores{};
+        uint32_t m_money{};
         std::array<uint8_t, SKILLS.size()> m_skill_levels{};
 
         EventBus m_bus{};
