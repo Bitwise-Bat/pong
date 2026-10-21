@@ -168,32 +168,52 @@ namespace pong
     void Game::collide_balls_boxes()
     {
         std::vector<Ball> spawned;
+        std::vector<size_t> hits;
+        std::vector<size_t> dead;
 
         for (auto& ball : m_balls)
         {
             const Stats stats = ball.stats();
 
+            hits.clear();
+            float best_dx = 0.0f, best_dy = 0.0f;
             for (size_t i = 0; i < m_boxes.size(); ++i)
             {
-                auto& box = m_boxes[i];
-
                 float dx, dy;
-                if (!overlap(ball.hitbox(), box.rect, dx, dy)) continue;
+                if (!overlap(ball.hitbox(), m_boxes[i].rect, dx, dy)) continue;
 
-                resolve_overlap(ball, dx, dy);
-
-                box.hit(static_cast<uint16_t>(stats[Stat::Damage]));
-                if (box.dead())
+                hits.push_back(i);
+                if (std::abs(dx) + std::abs(dy) > std::abs(best_dx) + std::abs(best_dy))
                 {
-                    m_score += static_cast<uint8_t>(stats[Stat::Money]);
-                    m_bus.publish(MoneyChanged{ .money = m_score });
-
-                    apply_box_rewards(ball, box, spawned);
-
-                    m_boxes[i] = m_boxes.back();
-                    m_boxes.pop_back();
+                    best_dx = dx;
+                    best_dy = dy;
                 }
-                break;
+            }
+
+            if (hits.empty()) continue;
+
+            // Resolve once along the deepest overlap so touching several boxes does not reflect twice.
+            resolve_overlap(ball, best_dx, best_dy);
+
+            dead.clear();
+            for (const size_t i : hits)
+            {
+                auto& box = m_boxes[i];
+                box.hit(static_cast<uint16_t>(stats[Stat::Damage]));
+                if (!box.dead()) continue;
+
+                m_score += static_cast<uint8_t>(stats[Stat::Money]);
+                m_bus.publish(MoneyChanged{ .money = m_score });
+
+                apply_box_rewards(ball, box, spawned);
+                dead.push_back(i);
+            }
+
+            // Indices are ascending, so removing from the back keeps the remaining ones valid.
+            for (auto it = dead.rbegin(); it != dead.rend(); ++it)
+            {
+                m_boxes[*it] = m_boxes.back();
+                m_boxes.pop_back();
             }
         }
 
