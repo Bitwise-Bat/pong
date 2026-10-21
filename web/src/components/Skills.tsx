@@ -72,14 +72,17 @@ export default ({ game, onClose }: SkillsProps) => {
     useEvent("ore", refresh);
     useEvent("skill", refresh);
 
-    const nodes: SkillNode[] = skills.map((skill) => ({
+    // A skill shows up only once all of its parents are owned.
+    const visible = skills.filter((skill) => skill.parents.every((parent) => skills[parent].level > 0));
+
+    const nodes: SkillNode[] = visible.map((skill) => ({
         id: String(skill.id),
         type: "skill",
         position: { x: skill.x, y: skill.y },
         data: { skill },
     }));
 
-    const edges: BuiltInEdge[] = skills.flatMap((skill) => skill.parents.map((parent): BuiltInEdge => ({
+    const edges: BuiltInEdge[] = visible.flatMap((skill) => skill.parents.map((parent): BuiltInEdge => ({
         id: `${parent}-${skill.id}`,
         source: String(parent),
         target: String(skill.id),
@@ -95,6 +98,7 @@ export default ({ game, onClose }: SkillsProps) => {
             nodeTypes={nodeTypes}
             colorMode="dark"
             fitView
+            fitViewOptions={{ maxZoom: 1 }}
             proOptions={{ hideAttribution: true }}
             nodesDraggable={false}
             nodesConnectable={false}
