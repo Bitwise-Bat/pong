@@ -123,7 +123,6 @@ namespace pong
         ball.base[Stat::Bounds] = 10;
         ball.base[Stat::Speed] = 300;
         ball.base[Stat::Health] = 1;
-        ball.base[Stat::Money] = 1;
 
         m_balls.push_back(ball);
 
@@ -205,7 +204,7 @@ namespace pong
             if (m_balls.empty())
             {
                 m_playing = false;
-                m_bus.publish(GameOver{ .score = m_score });
+                m_bus.publish(GameOver{});
             }
             else
             {
@@ -368,9 +367,6 @@ namespace pong
                 const auto ore = static_cast<size_t>(box.material);
                 m_bus.publish(OreChanged{ .material = static_cast<uint8_t>(ore), .count = ++m_ores[ore] });
 
-                m_score += static_cast<uint8_t>(stats[Stat::Money]);
-                m_bus.publish(MoneyChanged{ .money = m_score });
-
                 apply_box_rewards(ball, box, spawned);
                 dead.push_back(i);
             }
@@ -388,7 +384,6 @@ namespace pong
 
     void Game::apply_box_rewards(Ball& ball, const Box& box, std::vector<Ball>& spawned)
     {
-        ball.modifiers.push_back({ .stat = Stat::Money, .op = Op::Add, .value = 1,  .remaining = -1.f });
         ball.modifiers.push_back({ .stat = Stat::Speed, .op = Op::Add, .value = 10, .remaining = -1.f });
 
         switch (box.effect)

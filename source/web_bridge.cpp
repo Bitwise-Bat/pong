@@ -26,24 +26,12 @@ namespace
         g_on_event(obj);
     }
 
-    void on_score_changed(const pong::MoneyChanged& event)
-    {
-        if (g_on_event.isUndefined()) return;
-    
-        emscripten::val obj = emscripten::val::object();
-        obj.set("type", "money");
-        obj.set("money", event.money);
-    
-        g_on_event(obj);
-    }
-
-    void on_game_over(const pong::GameOver& event)
+    void on_game_over(const pong::GameOver&)
     {
         if (g_on_event.isUndefined()) return;
 
         emscripten::val obj = emscripten::val::object();
         obj.set("type", "gameOver");
-        obj.set("score", event.score);
 
         g_on_event(obj);
     }
@@ -69,7 +57,6 @@ void pong::bridge_attach(AppContext* ctx)
     g_ctx = ctx;
     
     g_subs.push_back(g_ctx->game.events().subscribe<OreChanged>(&on_ore_changed));
-    g_subs.push_back(g_ctx->game.events().subscribe<MoneyChanged>(&on_score_changed));
     g_subs.push_back(g_ctx->game.events().subscribe<GameOver>(&on_game_over));
 }
 

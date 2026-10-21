@@ -56,7 +56,6 @@ namespace pong
         Input m_input{};
         Field m_field{};
         Particles m_particles{};
-        uint32_t m_score{};
         bool m_playing{};
         std::array<uint32_t, static_cast<size_t>(Material::Count)> m_ores{};
 

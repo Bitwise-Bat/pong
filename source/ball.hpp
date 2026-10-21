@@ -75,7 +75,6 @@ namespace pong
             new_ball.base[Stat::Bounds] = ball.base[Stat::Bounds];
             new_ball.base[Stat::Speed] = ball.base[Stat::Speed];;
             new_ball.base[Stat::Health] = ball.base[Stat::Health];;
-            new_ball.base[Stat::Money] = ball.base[Stat::Money];;
 
             return new_ball;
         }
