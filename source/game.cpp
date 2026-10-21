@@ -60,6 +60,20 @@ namespace pong
             return std::min(DAMAGE_STAGES - 1, static_cast<int>(lost * DAMAGE_STAGES));
         }
 
+        Color material_color(Material material)
+        {
+            switch (material)
+            {
+            case Material::Stone:   return {140, 140, 140, 255};
+            case Material::Iron:    return {190, 195, 205, 255};
+            case Material::Bronze:  return {190, 120, 60, 255};
+            case Material::Silver:  return {225, 230, 240, 255};
+            case Material::Gold:    return {250, 205, 60, 255};
+            case Material::Diamond: return {110, 230, 245, 255};
+            }
+            return WHITE;
+        }
+
         void resolve_overlap(Ball& ball, float dx, float dy)
         {
             ball.x += dx;
@@ -73,6 +87,7 @@ namespace pong
     void Game::update(float delta_time)
     {
         update_paddle(delta_time);
+        m_particles.update(delta_time);
     }
 
     void Game::restart()
@@ -85,6 +100,7 @@ namespace pong
         m_paddle.rect.y = m_field.height - 4 - (m_paddle.height + m_paddle.rect.h) / 2;
 
         m_balls.clear();
+        m_particles.clear();
         Ball ball{};
 
         ball.x = m_field.width / 2 - 10 / 2;
@@ -126,6 +142,8 @@ namespace pong
         }
 
         r->fill_rect(m_paddle.visual_rect(), WHITE, 0, pixels_to_uv(PADDLE_PIXELS));
+
+        m_particles.render(r);
     }
 
     void Game::fixed_update(float delta_time)
@@ -258,12 +276,29 @@ namespace pong
             // Resolve once along the deepest overlap so touching several boxes does not reflect twice.
             resolve_overlap(ball, best_dx, best_dy);
 
+            const Rect contact = ball.hitbox();
+            const float normal = std::atan2(best_dy, best_dx);
+
             dead.clear();
             for (const size_t i : hits)
             {
                 auto& box = m_boxes[i];
+                const Color color = material_color(box.material);
+
+                m_particles.emit(m_rng, {
+                    .x = contact.x + contact.w * 0.5f, .y = contact.y + contact.h * 0.5f,
+                    .angle = normal, .spread = 0.9f, .count = 4,
+                    .color = color, .speed = 160.0f, .life = 0.35f, .size = 3.0f,
+                });
+
                 box.hit(static_cast<uint16_t>(stats[Stat::Damage]));
                 if (!box.dead()) continue;
+
+                m_particles.emit(m_rng, {
+                    .x = box.rect.x + box.rect.w * 0.5f, .y = box.rect.y + box.rect.h * 0.5f,
+                    .angle = 0.0f, .spread = 3.14159265f, .count = 16,
+                    .color = color, .speed = 220.0f, .life = 0.7f, .size = 5.0f,
+                });
 
                 m_score += static_cast<uint8_t>(stats[Stat::Money]);
                 m_bus.publish(MoneyChanged{ .money = m_score });

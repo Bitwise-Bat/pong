@@ -11,6 +11,7 @@
 #include "field.hpp"
 #include "input.hpp"
 #include "paddle.hpp"
+#include "particles.hpp"
 #include "renderer/renderer.hpp"
 
 namespace pong
@@ -52,6 +53,7 @@ namespace pong
         std::vector<Ball> m_balls{};
         Input m_input{};
         Field m_field{};
+        Particles m_particles{};
         uint32_t m_score{};
 
         EventBus m_bus{};
