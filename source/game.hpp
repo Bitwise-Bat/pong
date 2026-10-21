@@ -9,6 +9,7 @@
 #include "ball.hpp"
 #include "box.hpp"
 #include "event_bus.hpp"
+#include "events.hpp"
 #include "field.hpp"
 #include "input.hpp"
 #include "paddle.hpp"
@@ -54,6 +55,8 @@ namespace pong
         void apply_box_rewards(Ball& ball, const Box& box, std::vector<Ball>& spawned);
         void generate_boxes();
         void apply_skills(Ball& ball) const;
+        void publish_time(bool force);
+        void end_round(GameOverReason reason);
 
     private:
         Paddle m_paddle{};
@@ -63,6 +66,8 @@ namespace pong
         Field m_field{};
         Particles m_particles{};
         bool m_playing{};
+        float m_time_left{};
+        uint32_t m_time_shown{};
         std::array<uint32_t, static_cast<size_t>(Material::Count)> m_ores{};
         std::array<uint8_t, SKILLS.size()> m_skill_levels{};
 

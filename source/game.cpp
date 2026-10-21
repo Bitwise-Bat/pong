@@ -20,6 +20,7 @@ namespace pong
         constexpr Color WHITE{255, 255, 255, 255};
         constexpr Color BLACK{0, 0, 0, 255};
         constexpr float BOX_CELL = 25.0f;
+        constexpr float ROUND_TIME = 60.0f;
 
         uint16_t material_health(Material material)
         {
@@ -127,6 +128,9 @@ namespace pong
         m_balls.push_back(ball);
 
         generate_boxes();
+
+        m_time_left = ROUND_TIME;
+        publish_time(true);
     }
 
     bool Game::can_buy_skill(size_t id) const
@@ -250,10 +254,16 @@ namespace pong
             sample_paddle_input();
             update_balls(delta_time);
 
+            m_time_left = std::max(0.0f, m_time_left - delta_time);
+            publish_time(false);
+
             if (m_balls.empty())
             {
-                m_playing = false;
-                m_bus.publish(GameOver{});
+                end_round(GameOverReason::BallsLost);
+            }
+            else if (m_time_left <= 0.0f)
+            {
+                end_round(GameOverReason::TimeUp);
             }
             else
             {
@@ -263,6 +273,22 @@ namespace pong
         }
 
         m_bus.flush();
+    }
+
+    // Only whole-second changes are published, so the UI is not flooded every step.
+    void Game::publish_time(bool force)
+    {
+        const auto seconds = static_cast<uint32_t>(std::ceil(m_time_left));
+        if (!force && seconds == m_time_shown) return;
+
+        m_time_shown = seconds;
+        m_bus.publish(TimeChanged{ .seconds = seconds });
+    }
+
+    void Game::end_round(GameOverReason reason)
+    {
+        m_playing = false;
+        m_bus.publish(GameOver{ .reason = reason });
     }
 
     void Game::sample_paddle_input()

@@ -4,7 +4,8 @@ export type PongEvent =
     | { type: "buffStart"; buff: number; duration: number }
     | { type: "buffEnd";   buff: number }
     | { type: "skill";     id: number }
-    | { type: "gameOver" };
+    | { type: "time";      seconds: number }
+    | { type: "gameOver";  reason: "time" | "balls" };
 
 export type EventType = PongEvent["type"];
 export type EventOf<K extends EventType> = Extract<PongEvent, { type: K }>;

@@ -12,11 +12,13 @@ export default ({ game } : MenuProps) => {
     const [open, setOpen] = useState(true);
     const [shown, setShown] = useState(false);
     const [gameOver, setGameOver] = useState(false);
+    const [timeUp, setTimeUp] = useState(false);
     const [skillsOpen, setSkillsOpen] = useState(false);
     const [creditsOpen, setCreditsOpen] = useState(false);
 
-    useEvent("gameOver", () => {
+    useEvent("gameOver", (e) => {
         setGameOver(true);
+        setTimeUp(e.reason === "time");
         setOpen(true);
     });
 
@@ -35,7 +37,7 @@ export default ({ game } : MenuProps) => {
     return <div className={`absolute inset-0 flex items-center justify-center bg-slate-950/40 backdrop-blur-[2px] transition-opacity duration-500 ${shown ? "opacity-100" : "opacity-0"}`}>
         <div className={`flex flex-col items-center gap-9 px-14 py-11 rounded-2xl border border-white/10 bg-slate-900/60 shadow-2xl shadow-black/40 backdrop-blur-md transition-all duration-700 ${shown ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"}`}>
             <div className="flex flex-col items-center gap-3">
-                <h1 className="text-5xl font-semibold tracking-[0.35em] pl-[0.35em] text-white">{gameOver ? "GAME OVER" : "PONG"}</h1>
+                <h1 className="text-5xl font-semibold tracking-[0.35em] pl-[0.35em] text-white">{gameOver ? (timeUp ? "TIME'S UP" : "GAME OVER") : "PONG"}</h1>
                 <div className="h-px w-16 bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
                 <p className="text-[11px] uppercase tracking-[0.4em] pl-[0.4em] text-white/45">Break. Mine. Collect.</p>
             </div>

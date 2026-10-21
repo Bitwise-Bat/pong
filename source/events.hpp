@@ -9,7 +9,17 @@ namespace pong
         uint32_t count{};
     };
 
-    struct GameOver {};
+    enum class GameOverReason : uint8_t { BallsLost, TimeUp };
+
+    struct GameOver
+    {
+        GameOverReason reason{};
+    };
+
+    struct TimeChanged
+    {
+        uint32_t seconds{};
+    };
 
     struct SkillBought
     {

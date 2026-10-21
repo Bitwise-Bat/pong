@@ -26,12 +26,24 @@ namespace
         g_on_event(obj);
     }
 
-    void on_game_over(const pong::GameOver&)
+    void on_game_over(const pong::GameOver& event)
     {
         if (g_on_event.isUndefined()) return;
 
         emscripten::val obj = emscripten::val::object();
         obj.set("type", "gameOver");
+        obj.set("reason", event.reason == pong::GameOverReason::TimeUp ? "time" : "balls");
+
+        g_on_event(obj);
+    }
+
+    void on_time_changed(const pong::TimeChanged& event)
+    {
+        if (g_on_event.isUndefined()) return;
+
+        emscripten::val obj = emscripten::val::object();
+        obj.set("type", "time");
+        obj.set("seconds", event.seconds);
 
         g_on_event(obj);
     }
@@ -119,6 +131,7 @@ void pong::bridge_attach(AppContext* ctx)
     
     g_subs.push_back(g_ctx->game.events().subscribe<OreChanged>(&on_ore_changed));
     g_subs.push_back(g_ctx->game.events().subscribe<GameOver>(&on_game_over));
+    g_subs.push_back(g_ctx->game.events().subscribe<TimeChanged>(&on_time_changed));
     g_subs.push_back(g_ctx->game.events().subscribe<SkillBought>(&on_skill_bought));
 }
 
