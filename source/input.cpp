@@ -12,6 +12,7 @@ namespace pong
         {
             case Action::Left: return keys[SDL_SCANCODE_A] || keys[SDL_SCANCODE_LEFT];
             case Action::Right: return keys[SDL_SCANCODE_D] || keys[SDL_SCANCODE_RIGHT];
+            case Action::Sprint: return keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT];
         }
         
         return false;

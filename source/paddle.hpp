@@ -1,12 +1,14 @@
 #pragma once
 
 #include "math.hpp"
+#include "modifier.hpp"
 
 namespace pong
 {
     struct PaddleInput
     {
         float dir{0.0f};
+        bool sprint{false};
     };
     
     class Paddle
@@ -14,7 +16,7 @@ namespace pong
     public:
         Rect rect{}; // collision bounds
         float width{}, height{}; // drawn size
-        float speed = 400.f;
+        Stats stats{}; // PaddleSpeed, and Sprint as the extra speed while sprinting (0 until unlocked)
         float vx{0.0};
         
         void update(const PaddleInput& in, float delta_time, float field_width);

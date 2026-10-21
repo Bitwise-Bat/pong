@@ -4,7 +4,7 @@
 
 namespace pong
 {
-    enum class Action : uint8_t { Left, Right };
+    enum class Action : uint8_t { Left, Right, Sprint };
     
     class Input
     {

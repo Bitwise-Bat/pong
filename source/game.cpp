@@ -21,6 +21,7 @@ namespace pong
         constexpr Color BLACK{0, 0, 0, 255};
         constexpr float BOX_CELL = 25.0f;
         constexpr float ROUND_TIME = 60.0f;
+        constexpr float PADDLE_SPEED = 300.0f;
         constexpr uint16_t CHEST_HEALTH = 50;
         constexpr float DROP_SIZE = 25.0f;
         constexpr float DROP_GRAVITY = 500.0f;
@@ -118,6 +119,10 @@ namespace pong
         m_paddle.width = 100;
         m_paddle.height = m_paddle.width * PADDLE_PIXELS.h / PADDLE_PIXELS.w;
         m_paddle.rect.x = m_field.width / 2 - m_paddle.rect.w / 2;
+
+        m_paddle.stats = {};
+        m_paddle.stats[Stat::PaddleSpeed] = PADDLE_SPEED;
+        apply_skills(m_paddle.stats);
         m_paddle.rect.y = m_field.height - 4 - (m_paddle.height + m_paddle.rect.h) / 2;
 
         m_balls.clear();
@@ -330,6 +335,7 @@ namespace pong
         m_paddle_input = {};
         if (m_input.down(Action::Left)) m_paddle_input.dir -= 1;
         if (m_input.down(Action::Right)) m_paddle_input.dir += 1;
+        m_paddle_input.sprint = m_input.down(Action::Sprint);
     }
 
     void Game::update_paddle(float delta_time)

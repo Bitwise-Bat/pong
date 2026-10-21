@@ -4,13 +4,14 @@
 
 namespace pong
 {
-    enum class Stat : uint8_t { Damage, Health, Speed, Size, Bounds, Time, Count }; // Time is the round length, not a ball stat
+    // Damage..Bounds belong to the ball, Time is the round length, PaddleSpeed and Sprint belong to the paddle.
+    enum class Stat : uint8_t { Damage, Health, Speed, Size, Bounds, Time, PaddleSpeed, Sprint, Count };
     enum class Op : uint8_t { Add, Multiply };
     
     struct Modifier
     {
-        Stat stat;
-        Op op;
+        Stat stat{};
+        Op op{};
         float value{};
         float remaining = -1.f; // -1 infinity
     };
