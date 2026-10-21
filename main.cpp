@@ -10,7 +10,7 @@
 #include "game.hpp"
 #include "log.hpp"
 #include "web_bridge.hpp"
-#include "renderer/sdl/renderer.hpp"
+#include "renderer/webgpu/renderer.hpp"
 
 constexpr float FIXED_UPDATE_MS = 1000.0f / 50.0f;
 constexpr float FIXED_UPDATE_INTERVAL = FIXED_UPDATE_MS / 1000.0f;
@@ -43,8 +43,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     app->window.reset(SDL_CreateWindow("Pong", 800, 600, 0));
     P_SDL_ASSERT(app->window.get() != nullptr);
 
-    app->renderer = std::make_unique<pong::SdlRenderer>(app->window.get());
-    app->renderer->set_logical_size(800, 600);
+    app->renderer = std::make_unique<pong::WebGpuRenderer>(800, 600);
 
     app->game.restart();
     app->last_ms = static_cast<float>(SDL_GetTicksNS()) / 1.0e6f;
@@ -64,7 +63,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 SDL_AppResult SDL_AppIterate(void* appstate)
 {
     auto app = static_cast<AppContext*>(appstate);
-    pong::SdlRenderer* renderer = app->renderer.get();
+    pong::WebGpuRenderer* renderer = app->renderer.get();
 
     const float now = static_cast<float>(SDL_GetTicksNS()) / 1.0e6f;
     float frame_ms = now - app->last_ms;
