@@ -147,6 +147,11 @@ namespace
         else g_ctx->game.set_pointer(u, v);
     }
 
+    void bridge_reset_game()
+    {
+        if (g_ctx) g_ctx->save.reset();
+    }
+
     void bridge_start_game()
     {
         if (g_ctx) g_ctx->game.start();
@@ -188,4 +193,5 @@ EMSCRIPTEN_BINDINGS(pong)
     emscripten::function("getVolumes", &bridge_get_volumes);
     emscripten::function("setVolume", &bridge_set_volume);
     emscripten::function("setPointer", &bridge_set_pointer);
+    emscripten::function("resetGame", &bridge_reset_game);
 }

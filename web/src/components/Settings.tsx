@@ -17,6 +17,13 @@ interface SettingsProps {
 
 export default ({ game, onClose }: SettingsProps) => {
     const [volumes, setVolumes] = useState<Volumes>(() => game.getVolumes());
+    const [confirmReset, setConfirmReset] = useState(false);
+
+    const reset = () => {
+        game.resetGame();
+        setVolumes(game.getVolumes());
+        setConfirmReset(false);
+    };
 
     const change = (index: number, value: number) => {
         game.setVolume(index, value);
@@ -43,7 +50,34 @@ export default ({ game, onClose }: SettingsProps) => {
                     </label>)}
                 </div>
             </section>
+            <button
+                onClick={() => setConfirmReset(true)}
+                className="px-4 py-1.5 rounded-sm border border-red-400/50 text-xs uppercase tracking-[0.25em] pl-[calc(1rem+0.25em)] text-red-300 hover:bg-red-400 hover:text-slate-950 transition-colors cursor-pointer"
+            >
+                Reset game
+            </button>
         </div>
+        {confirmReset && <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70">
+            <div role="dialog" aria-modal="true" className="flex flex-col items-center gap-5 max-w-sm px-8 py-6 rounded-sm border border-white/10 bg-slate-900 text-center">
+                <h3 className="text-lg font-semibold text-white">Reset game?</h3>
+                <p className="text-sm text-white/60">This deletes your money, skills and settings. It cannot be undone.</p>
+                <div className="flex gap-3">
+                    <button
+                        autoFocus
+                        onClick={() => setConfirmReset(false)}
+                        className="px-4 py-1.5 rounded-sm bg-white/10 text-sm text-white hover:bg-white/20 cursor-pointer"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={reset}
+                        className="px-4 py-1.5 rounded-sm bg-red-500 text-sm font-medium text-white hover:bg-red-400 cursor-pointer"
+                    >
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </div>}
         <button
             onClick={onClose}
             className="absolute bottom-3 left-3 px-3 py-1 rounded-sm bg-black/60 text-sm text-white/70 hover:text-white cursor-pointer"

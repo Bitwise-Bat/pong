@@ -14,6 +14,8 @@ namespace pong
         // Loads the stored data, then saves after every skill purchase, round end and page close.
         void init(Game& game, Audio& audio);
         void save() const;
+        // Deletes the stored data and resets progress and volumes to their defaults.
+        void reset();
 
     private:
         void load();

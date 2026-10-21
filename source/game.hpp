@@ -47,6 +47,8 @@ namespace pong
 
         // Used when restoring a save; levels above the skill's maximum are clamped.
         void set_money(uint32_t amount) { m_money = amount; }
+        // Drops money and skills and stops the round.
+        void reset_progress();
         void set_skill_level(size_t id, uint32_t level)
         {
             m_skill_levels[id] = static_cast<uint8_t>(std::min<size_t>(level, SKILLS[id].max_level()));

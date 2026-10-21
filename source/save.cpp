@@ -71,6 +71,17 @@ namespace pong
         val::global("localStorage").call<void>("setItem", std::string(SAVE_KEY), json);
     }
 
+    void Save::reset()
+    {
+        val::global("localStorage").call<void>("removeItem", std::string(SAVE_KEY));
+
+        m_game->reset_progress();
+        for (const auto& [key, channel] : VOLUME_KEYS)
+        {
+            m_audio->set_volume(channel, 1.0f);
+        }
+    }
+
     void Save::load()
     {
         const val item = val::global("localStorage").call<val>("getItem", std::string(SAVE_KEY));

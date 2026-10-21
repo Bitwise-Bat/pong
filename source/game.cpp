@@ -292,6 +292,14 @@ namespace pong
         m_combo_numbers.render(r, DIGIT_PIXELS);
     }
 
+    void Game::reset_progress()
+    {
+        m_money = 0;
+        m_skill_levels.fill(0);
+        m_playing = false;
+        restart();
+    }
+
     void Game::start()
     {
         restart();
