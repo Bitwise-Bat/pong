@@ -4,7 +4,7 @@ namespace pong
 {
     struct Field
     {
-        float width{800};
-        float height{600};
+        float width{960};
+        float height{540};
     };
 }
