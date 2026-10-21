@@ -78,18 +78,21 @@ namespace pong
     void Game::restart()
     {
         m_paddle.rect.w = 100;
-        m_paddle.rect.h = m_paddle.rect.w * PADDLE_PIXELS.h / PADDLE_PIXELS.w;
+        m_paddle.rect.h = 12;
+        m_paddle.width = 100;
+        m_paddle.height = m_paddle.width * PADDLE_PIXELS.h / PADDLE_PIXELS.w;
         m_paddle.rect.x = m_field.width / 2 - m_paddle.rect.w / 2;
-        m_paddle.rect.y = m_field.height - m_paddle.rect.h - 4;
+        m_paddle.rect.y = m_field.height - 4 - (m_paddle.height + m_paddle.rect.h) / 2;
 
         m_balls.clear();
         Ball ball{};
 
-        ball.x = m_field.width / 2 - 20 / 2;
-        ball.y = m_field.height / 2 - 20 / 2;
+        ball.x = m_field.width / 2 - 10 / 2;
+        ball.y = m_field.height / 2 - 10 / 2;
 
         ball.base[Stat::Damage] = 2;
         ball.base[Stat::Size] = 20;
+        ball.base[Stat::Bounds] = 10;
         ball.base[Stat::Speed] = 300;
         ball.base[Stat::Health] = 1;
         ball.base[Stat::Money] = 1;
@@ -108,7 +111,7 @@ namespace pong
 
         for (const auto& ball : m_balls)
         {
-            r->fill_rect(ball.hitbox(), WHITE, 0, pixels_to_uv(BALL_PIXELS));
+            r->fill_rect(ball.visual_rect(), WHITE, 0, pixels_to_uv(BALL_PIXELS));
         }
 
         for (const auto& box : m_boxes)
@@ -122,7 +125,7 @@ namespace pong
             }
         }
 
-        r->fill_rect(m_paddle.rect, WHITE, 0, pixels_to_uv(PADDLE_PIXELS));
+        r->fill_rect(m_paddle.visual_rect(), WHITE, 0, pixels_to_uv(PADDLE_PIXELS));
     }
 
     void Game::fixed_update(float delta_time)
@@ -292,6 +295,7 @@ namespace pong
             break;
         case BoxEffect::Bigger:
             ball.modifiers.push_back({ .stat = Stat::Size,   .op = Op::Add, .value = 2, .remaining = -1.f });
+            ball.modifiers.push_back({ .stat = Stat::Bounds, .op = Op::Add, .value = 2, .remaining = -1.f });
             ball.modifiers.push_back({ .stat = Stat::Damage, .op = Op::Add, .value = 1,  .remaining = -1.f });
             break;
         case BoxEffect::None:

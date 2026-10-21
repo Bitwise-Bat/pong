@@ -4,7 +4,7 @@
 
 namespace pong
 {
-    enum class Stat : uint8_t { Damage, Health, Speed, Size, Money, Count };
+    enum class Stat : uint8_t { Damage, Health, Speed, Size, Bounds, Money, Count };
     enum class Op : uint8_t { Add, Multiply };
     
     struct Modifier

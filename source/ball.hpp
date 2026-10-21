@@ -28,12 +28,26 @@ namespace pong
         
         [[nodiscard]] Rect hitbox() const
         {
-            const auto& stat = stats();
-            const auto size = stat[Stat::Size];
-            
-            return  {
+            const auto bounds = stats()[Stat::Bounds];
+
+            return {
                 .x = x,
                 .y = y,
+                .w = bounds,
+                .h = bounds
+            };
+        }
+
+        // Drawn rect (Stat::Size), centered on the hitbox (Stat::Bounds).
+        [[nodiscard]] Rect visual_rect() const
+        {
+            const Stats s = stats();
+            const float size = s[Stat::Size];
+            const float offset = (s[Stat::Bounds] - size) * 0.5f;
+
+            return {
+                .x = x + offset,
+                .y = y + offset,
                 .w = size,
                 .h = size
             };
@@ -58,6 +72,7 @@ namespace pong
         
             new_ball.base[Stat::Damage] = ball.base[Stat::Damage];
             new_ball.base[Stat::Size] = ball.base[Stat::Size];;
+            new_ball.base[Stat::Bounds] = ball.base[Stat::Bounds];
             new_ball.base[Stat::Speed] = ball.base[Stat::Speed];;
             new_ball.base[Stat::Health] = ball.base[Stat::Health];;
             new_ball.base[Stat::Money] = ball.base[Stat::Money];;
