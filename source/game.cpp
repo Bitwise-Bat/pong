@@ -38,7 +38,7 @@ namespace pong
             return 1;
         }
 
-        // Atlas row at y = 0, left to right: materials (enum order), damage overlays, paddle (3 cells), ball (1 cell), chest (1 cell).
+        // Atlas row at y = 0, left to right: materials (enum order), damage overlays, paddle (3 cells), ball (1 cell), chest (1 cell), digits 0-9.
         Rect material_pixels(Material material)
         {
             const float x = MATERIALS_X + static_cast<float>(material) * MATERIAL_TILE_SIZE;
@@ -56,6 +56,7 @@ namespace pong
         constexpr Rect PADDLE_PIXELS{DAMAGE_END_X, 0.0f, 3.0f * MATERIAL_TILE_SIZE, MATERIAL_TILE_SIZE};
         constexpr Rect BALL_PIXELS{DAMAGE_END_X + PADDLE_PIXELS.w, 0.0f, MATERIAL_TILE_SIZE, MATERIAL_TILE_SIZE};
         constexpr Rect CHEST_PIXELS{BALL_PIXELS.x + BALL_PIXELS.w, 0.0f, MATERIAL_TILE_SIZE, MATERIAL_TILE_SIZE};
+        constexpr Rect DIGIT_PIXELS{CHEST_PIXELS.x + CHEST_PIXELS.w, 0.0f, MATERIAL_TILE_SIZE, MATERIAL_TILE_SIZE};
 
         // -1 for an undamaged box, otherwise 0..DAMAGE_STAGES-1 by the share of health lost.
         int damage_stage(const Box& box)
@@ -95,6 +96,7 @@ namespace pong
     {
         update_paddle(delta_time);
         m_particles.update(delta_time);
+        m_damage_numbers.update(delta_time);
     }
 
     void Game::restart()
@@ -109,6 +111,7 @@ namespace pong
         m_balls.clear();
         m_boxes.clear();
         m_particles.clear();
+        m_damage_numbers.clear();
 
         for (size_t i = 0; i < m_ores.size(); ++i)
         {
@@ -249,6 +252,7 @@ namespace pong
         r->fill_rect(m_paddle.visual_rect(), WHITE, 0, pixels_to_uv(PADDLE_PIXELS));
 
         m_particles.render(r);
+        m_damage_numbers.render(r, DIGIT_PIXELS);
     }
 
     void Game::start()
@@ -438,7 +442,9 @@ namespace pong
 
                 m_bus.publish(BoxHit{});
 
-                box.hit(static_cast<uint16_t>(stats[Stat::Damage]));
+                const auto damage = static_cast<uint16_t>(stats[Stat::Damage]);
+                box.hit(damage);
+                m_damage_numbers.add(box.rect, damage, box.dead());
                 if (!box.dead()) continue;
 
                 m_bus.publish(BoxDestroyed{});

@@ -8,6 +8,7 @@
 
 #include "ball.hpp"
 #include "box.hpp"
+#include "damage_numbers.hpp"
 #include "event_bus.hpp"
 #include "events.hpp"
 #include "field.hpp"
@@ -65,6 +66,7 @@ namespace pong
         Input m_input{};
         Field m_field{};
         Particles m_particles{};
+        DamageNumbers m_damage_numbers{};
         bool m_playing{};
         float m_time_left{};
         uint32_t m_time_shown{};

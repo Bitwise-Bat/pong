@@ -49,5 +49,6 @@ target_sources(pong
             source/input.cpp
             source/ball.cpp
             source/particles.cpp
+            source/damage_numbers.cpp
             source/game.cpp
             source/web_bridge.cpp)
