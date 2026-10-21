@@ -12,6 +12,10 @@
 #include "web_bridge.hpp"
 #include "renderer/sdl/renderer.hpp"
 
+constexpr float FIXED_UPDATE_MS = 1000.0f / 50.0f;
+constexpr float FIXED_UPDATE_INTERVAL = FIXED_UPDATE_MS / 1000.0f;
+constexpr float MAX_FRAME_MS = 250.0f;
+
 namespace
 {
     template <class... Args>
@@ -23,6 +27,8 @@ namespace
         ::pong::fatal_impl(std::format("{} {}:{} (SDL: {})",
                                        cond, file, line, sdl_err));
     }
+    
+    
 }
 
 #define P_SDL_ASSERT(cond, ...) \
@@ -43,8 +49,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     app->renderer->set_logical_size(800, 600);
     
     app->game.restart();
-    app->last_ns = SDL_GetTicksNS();
-    
+    app->last_ms = static_cast<float>(SDL_GetTicksNS()) / 1.0e6f;
+
     pong::bridge_attach(app.get());
     
     *appstate = app.release();
@@ -62,11 +68,20 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     auto app = static_cast<AppContext*>(appstate);
     pong::SdlRenderer* renderer = app->renderer.get();
     
-    uint64_t now = SDL_GetTicksNS();
-    float delta_time = (now - app->last_ns) / 1e9f;
-    app->last_ns = now;
+    const float now = static_cast<float>(SDL_GetTicksNS()) / 1.0e6f;
+    float frame_ms = now - app->last_ms;
+    app->last_ms = now;
+
+    frame_ms = std::min(frame_ms, MAX_FRAME_MS);
+    app->accumulator += frame_ms;
+
+    while (app->accumulator >= FIXED_UPDATE_MS)
+    {
+        app->game.fixed_update(FIXED_UPDATE_INTERVAL);
+        app->accumulator -= FIXED_UPDATE_MS;
+    }
     
-    app->game.update(delta_time);
+    app->game.update(frame_ms / 1000.0f);
     
     renderer->clear({10, 10, 150, 255});
     

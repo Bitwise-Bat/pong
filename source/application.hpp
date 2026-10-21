@@ -18,5 +18,6 @@ struct AppContext
     WindowPtr window{};
     std::unique_ptr<pong::SdlRenderer> renderer{};
     pong::Game game{};
-    uint64_t last_ns{};
+    float last_ms{};
+    float accumulator{};
 };

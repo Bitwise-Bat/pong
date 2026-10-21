@@ -22,8 +22,9 @@ namespace pong
         void update(float delta_time);
         void restart();
         void render(Renderer* r);
+        void fixed_update(float delta_time);
 
-        std::span<const Ball> balls() const { return m_balls; }
+        [[nodiscard]] std::span<const Ball> balls() const { return m_balls; }
 
     private:
         std::mt19937 m_rng{ std::random_device{}() };
@@ -31,6 +32,7 @@ namespace pong
 
         BoxEffect roll_buff() { return static_cast<BoxEffect>(m_buffPick(m_rng)); }
 
+        void sample_paddle_input();
         void update_paddle(float delta_time);
         void update_balls(float delta_time);
 
@@ -44,6 +46,7 @@ namespace pong
 
     private:
         Paddle m_paddle{};
+        PaddleInput m_paddle_input{};
         std::vector<Ball> m_balls{};
         Input m_input{};
         Field m_field{};

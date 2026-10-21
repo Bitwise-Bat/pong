@@ -24,11 +24,6 @@ namespace pong
     void Game::update(float delta_time)
     {
         update_paddle(delta_time);
-        update_balls(delta_time);
-        collide_balls_boxes();
-        collide_balls_balls();
-
-        m_bus.flush();
     }
 
     void Game::restart()
@@ -70,13 +65,26 @@ namespace pong
         r->fill_rect(m_paddle.rect, {255, 255, 255, 255});
     }
 
+    void Game::fixed_update(float delta_time)
+    {
+        sample_paddle_input();
+        update_balls(delta_time);
+        collide_balls_boxes();
+        collide_balls_balls();
+
+        m_bus.flush();
+    }
+
+    void Game::sample_paddle_input()
+    {
+        m_paddle_input = {};
+        if (m_input.down(Action::Left)) m_paddle_input.dir -= 1;
+        if (m_input.down(Action::Right)) m_paddle_input.dir += 1;
+    }
+
     void Game::update_paddle(float delta_time)
     {
-        PaddleInput paddle_input{};
-        if (m_input.down(Action::Left)) paddle_input.dir -= 1;
-        if (m_input.down(Action::Right)) paddle_input.dir += 1;
-
-        m_paddle.update(paddle_input, delta_time, m_field.width);
+        m_paddle.update(m_paddle_input, delta_time, m_field.width);
     }
 
     void Game::update_balls(float delta_time)
