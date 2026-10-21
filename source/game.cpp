@@ -12,9 +12,9 @@ namespace pong
 {
     namespace
     {
-        constexpr Rect BACKGROUND_PIXELS{0.0f, 0.0f, 1024.0f, 572.0f};
+        constexpr Rect BACKGROUND_PIXELS{0.0f, 0.0f, 640.0f, 360.0f};
         constexpr float MATERIAL_TILE_SIZE = 50.0f;
-        constexpr float MATERIALS_X = 1050.0f;
+        constexpr float MATERIALS_X = 650.0f;
         constexpr int MATERIAL_COUNT = 6;
         constexpr int DAMAGE_STAGES = 4;
         constexpr Color WHITE{255, 255, 255, 255};
