@@ -155,12 +155,21 @@ namespace pong
         m_particles.render(r);
     }
 
+    void Game::start()
+    {
+        restart();
+        m_playing = true;
+    }
+
     void Game::fixed_update(float delta_time)
     {
-        sample_paddle_input();
-        update_balls(delta_time);
-        collide_balls_boxes();
-        collide_balls_balls();
+        if (m_playing)
+        {
+            sample_paddle_input();
+            update_balls(delta_time);
+            collide_balls_boxes();
+            collide_balls_balls();
+        }
 
         m_bus.flush();
     }

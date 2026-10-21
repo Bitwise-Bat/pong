@@ -37,6 +37,11 @@ namespace
         g_on_event(obj);
     }
 
+    void bridge_start_game()
+    {
+        if (g_ctx) g_ctx->game.start();
+    }
+
     void bridge_on_event(emscripten::val cb)
     {
         g_on_event = cb;
@@ -60,4 +65,5 @@ EMSCRIPTEN_BINDINGS(pong)
 {
     emscripten::function("onEvent", &bridge_on_event);
     emscripten::function("clearEvent", &bridge_clear_event);
+    emscripten::function("startGame", &bridge_start_game);
 }

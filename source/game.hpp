@@ -23,6 +23,7 @@ namespace pong
         EventBus& events() { return m_bus; }
         void update(float delta_time);
         void restart();
+        void start();
         void render(Renderer* r);
         void fixed_update(float delta_time);
 
@@ -56,6 +57,7 @@ namespace pong
         Field m_field{};
         Particles m_particles{};
         uint32_t m_score{};
+        bool m_playing{};
         std::array<uint32_t, static_cast<size_t>(Material::Count)> m_ores{};
 
         EventBus m_bus{};
