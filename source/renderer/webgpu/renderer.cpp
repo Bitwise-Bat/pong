@@ -17,32 +17,49 @@ namespace pong
 struct Globals { size: vec2f };
 @group(0) @binding(0) var<uniform> globals: Globals;
 
-struct Vertex
+struct RectData
 {
-    @location(0) position: vec2f,
-    @location(1) color: vec4f,
+    rect: vec4f,
+    color: u32,
 };
+@group(0) @binding(1) var<storage, read> rects: array<RectData>;
 
 struct VsOut
 {
     @builtin(position) position: vec4f,
     @location(0) color: vec4f,
+    @location(1) uv: vec2f,
 };
 
 @vertex
-fn vs_main(v: Vertex) -> VsOut
+fn vs_main(@builtin(vertex_index) index: u32) -> VsOut
 {
-    let ndc = vec2f(v.position.x / globals.size.x * 2.0 - 1.0, 1.0 - v.position.y / globals.size.y * 2.0);
+    let data = rects[index / 4u];
+    // Corners: (0,0) (1,0) (0,1) (1,1)
+    let uv = vec2f(f32(index & 1u), f32((index >> 1u) & 1u));
+    let pixel = data.rect.xy + uv * data.rect.zw;
+    let ndc = vec2f(pixel.x / globals.size.x * 2.0 - 1.0, 1.0 - pixel.y / globals.size.y * 2.0);
 
     var out: VsOut;
     out.position = vec4f(ndc, 0.0, 1.0);
-    out.color = v.color;
+    out.color = unpack4x8unorm(data.color);
+    out.uv = uv;
     return out;
 }
 
 @fragment
 fn fs_main(in: VsOut) -> @location(0) vec4f
 {
+    let border_width : f32 = 0.025;
+    
+    let is_border = in.uv.x < border_width || in.uv.x > (1.0 - border_width) ||
+                    in.uv.y < border_width || in.uv.y > (1.0 - border_width);
+
+    if(is_border)
+    {
+        return vec4f(0, 0, 0, 1);
+    }
+
     return in.color;
 }
 )";
@@ -117,20 +134,6 @@ fn fs_main(in: VsOut) -> @location(0) vec4f
         module_desc.nextInChain = &wgsl;
         wgpu::ShaderModule module = m_device.CreateShaderModule(&module_desc);
 
-        std::array<wgpu::VertexAttribute, 2> attributes{};
-        attributes[0].format = wgpu::VertexFormat::Float32x2;
-        attributes[0].offset = offsetof(Vertex, x);
-        attributes[0].shaderLocation = 0;
-        attributes[1].format = wgpu::VertexFormat::Unorm8x4;
-        attributes[1].offset = offsetof(Vertex, color);
-        attributes[1].shaderLocation = 1;
-
-        wgpu::VertexBufferLayout vertex_layout{};
-        vertex_layout.stepMode = wgpu::VertexStepMode::Vertex;
-        vertex_layout.arrayStride = sizeof(Vertex);
-        vertex_layout.attributeCount = attributes.size();
-        vertex_layout.attributes = attributes.data();
-
         wgpu::ColorTargetState target{};
         target.format = m_format;
 
@@ -143,8 +146,6 @@ fn fs_main(in: VsOut) -> @location(0) vec4f
         wgpu::RenderPipelineDescriptor pipeline_desc{};
         pipeline_desc.vertex.module = module;
         pipeline_desc.vertex.entryPoint = "vs_main";
-        pipeline_desc.vertex.bufferCount = 1;
-        pipeline_desc.vertex.buffers = &vertex_layout;
         pipeline_desc.primitive.topology = wgpu::PrimitiveTopology::TriangleList;
         pipeline_desc.fragment = &fragment;
         m_pipeline = m_device.CreateRenderPipeline(&pipeline_desc);
@@ -157,17 +158,6 @@ fn fs_main(in: VsOut) -> @location(0) vec4f
         const std::array<float, 4> globals{static_cast<float>(m_width), static_cast<float>(m_height), 0.0f, 0.0f};
         m_queue.WriteBuffer(m_uniform_buffer, 0, globals.data(), sizeof(globals));
 
-        wgpu::BindGroupEntry entry{};
-        entry.binding = 0;
-        entry.buffer = m_uniform_buffer;
-        entry.size = sizeof(globals);
-
-        wgpu::BindGroupDescriptor bind_group_desc{};
-        bind_group_desc.layout = m_pipeline.GetBindGroupLayout(0);
-        bind_group_desc.entryCount = 1;
-        bind_group_desc.entries = &entry;
-        m_bind_group = m_device.CreateBindGroup(&bind_group_desc);
-
         ensure_capacity(INITIAL_RECT_CAPACITY);
         m_ready = true;
     }
@@ -179,10 +169,24 @@ fn fs_main(in: VsOut) -> @location(0) vec4f
         size_t capacity = std::max(m_rect_capacity, INITIAL_RECT_CAPACITY);
         while (capacity < rect_count) capacity *= 2;
 
-        wgpu::BufferDescriptor vertex_desc{};
-        vertex_desc.usage = wgpu::BufferUsage::Vertex | wgpu::BufferUsage::CopyDst;
-        vertex_desc.size = capacity * 4 * sizeof(Vertex);
-        m_vertex_buffer = m_device.CreateBuffer(&vertex_desc);
+        wgpu::BufferDescriptor rect_desc{};
+        rect_desc.usage = wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopyDst;
+        rect_desc.size = capacity * sizeof(RectData);
+        m_rect_buffer = m_device.CreateBuffer(&rect_desc);
+
+        std::array<wgpu::BindGroupEntry, 2> entries{};
+        entries[0].binding = 0;
+        entries[0].buffer = m_uniform_buffer;
+        entries[0].size = 16;
+        entries[1].binding = 1;
+        entries[1].buffer = m_rect_buffer;
+        entries[1].size = rect_desc.size;
+
+        wgpu::BindGroupDescriptor bind_group_desc{};
+        bind_group_desc.layout = m_pipeline.GetBindGroupLayout(0);
+        bind_group_desc.entryCount = entries.size();
+        bind_group_desc.entries = entries.data();
+        m_bind_group = m_device.CreateBindGroup(&bind_group_desc);
 
         // Every rect is a quad of 4 vertices drawn as two triangles.
         std::vector<uint32_t> indices;
@@ -204,19 +208,14 @@ fn fs_main(in: VsOut) -> @location(0) vec4f
 
     void WebGpuRenderer::clear(Color c)
     {
-        m_vertices.clear();
+        m_rects.clear();
         m_clear_color = {c.r / 255.0, c.g / 255.0, c.b / 255.0, c.a / 255.0};
     }
 
     void WebGpuRenderer::fill_rect(const Rect& rect, Color c)
     {
         if (!m_ready) return;
-        const float x0 = rect.x, y0 = rect.y;
-        const float x1 = rect.x + rect.w, y1 = rect.y + rect.h;
-        m_vertices.push_back({ x0, y0, c });
-        m_vertices.push_back({ x1, y0, c });
-        m_vertices.push_back({ x0, y1, c });
-        m_vertices.push_back({ x1, y1, c });
+        m_rects.push_back({rect, c});
     }
 
     void WebGpuRenderer::present()
@@ -231,11 +230,11 @@ fn fs_main(in: VsOut) -> @location(0) vec4f
             return;
         }
 
-        const size_t rect_count = m_vertices.size() / 4;
+        const size_t rect_count = m_rects.size();
         ensure_capacity(rect_count);
         if (rect_count > 0)
         {
-            m_queue.WriteBuffer(m_vertex_buffer, 0, m_vertices.data(), m_vertices.size() * sizeof(Vertex));
+            m_queue.WriteBuffer(m_rect_buffer, 0, m_rects.data(), m_rects.size() * sizeof(RectData));
         }
 
         wgpu::RenderPassColorAttachment attachment{};
@@ -254,7 +253,6 @@ fn fs_main(in: VsOut) -> @location(0) vec4f
         {
             pass.SetPipeline(m_pipeline);
             pass.SetBindGroup(0, m_bind_group);
-            pass.SetVertexBuffer(0, m_vertex_buffer);
             pass.SetIndexBuffer(m_index_buffer, wgpu::IndexFormat::Uint32);
             pass.DrawIndexed(static_cast<uint32_t>(rect_count * 6));
         }

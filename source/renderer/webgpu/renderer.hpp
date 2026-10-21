@@ -19,9 +19,9 @@ namespace pong
         [[nodiscard]] bool ready() const { return m_ready; }
 
     private:
-        struct Vertex
+        struct alignas(16) RectData
         {
-            float x, y;
+            Rect rect;
             Color color;
         };
 
@@ -43,11 +43,11 @@ namespace pong
         wgpu::RenderPipeline m_pipeline{};
         wgpu::Buffer m_uniform_buffer{};
         wgpu::BindGroup m_bind_group{};
-        wgpu::Buffer m_vertex_buffer{};
+        wgpu::Buffer m_rect_buffer{};
         wgpu::Buffer m_index_buffer{};
         size_t m_rect_capacity{};
 
-        std::vector<Vertex> m_vertices{};
+        std::vector<RectData> m_rects{};
         wgpu::Color m_clear_color{};
     };
 }
