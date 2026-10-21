@@ -30,6 +30,10 @@ namespace pong
         constexpr float DROP_POP_SPEED = 120.0f;
         constexpr uint32_t MAX_COMBO = 10;
 
+        // Material weights (Stone..Diamond) for the row nearest the paddle and the deepest row; rows between blend them.
+        constexpr std::array<float, static_cast<size_t>(Material::Count)> SHALLOW_MATERIAL_WEIGHTS{ 100, 3, 0, 0, 0, 0 };
+        constexpr std::array<float, static_cast<size_t>(Material::Count)> DEEP_MATERIAL_WEIGHTS{ 25, 30, 22, 13, 7, 3 };
+
         // A drop is worth its material value times the ball's combo, up to the cap bought with the Streak skill.
         uint32_t combo_multiplier(const Ball& ball, uint32_t cap)
         {
@@ -639,6 +643,19 @@ namespace pong
         }
     }
 
+    // depth is 0 for the row nearest the paddle and 1 for the deepest row.
+    Material Game::roll_material(float depth)
+    {
+        std::array<float, static_cast<size_t>(Material::Count)> weights{};
+        for (size_t i = 0; i < weights.size(); ++i)
+        {
+            weights[i] = std::lerp(SHALLOW_MATERIAL_WEIGHTS[i], DEEP_MATERIAL_WEIGHTS[i], depth);
+        }
+
+        std::discrete_distribution<uint8_t> pick(weights.begin(), weights.end());
+        return static_cast<Material>(pick(m_rng));
+    }
+
     void Game::generate_boxes()
     {
         constexpr size_t rows = 10;
@@ -661,7 +678,8 @@ namespace pong
                 }
                 else
                 {
-                    box.material = roll_material();
+                    const float depth = static_cast<float>(rows - 1 - y) / static_cast<float>(rows - 1);
+                    box.material = roll_material(depth);
                     box.health = box.max_health = material_health(box.material);
                 }
 
