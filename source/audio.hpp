@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL_audio.h>
 #include <SDL3/SDL_stdinc.h>
+#include <dr_mp3.h>
 
 #include <memory>
 #include <vector>
@@ -42,14 +43,20 @@ namespace pong
         };
 
         void load(Sound& sound, const char* path);
+        void load_music(const char* path);
         void play(const Sound& sound);
         void mix(SDL_AudioStream* stream, int amount);
+        void mix_music(std::vector<Uint8>& buffer);
 
         SDL_AudioStream* m_stream{};
         SDL_AudioSpec m_spec{};
         Sound m_hit{};
         Sound m_ore_destroy{};
         std::vector<Voice> m_voices{};
+        drmp3 m_music{};
+        bool m_music_open{};
+        // Converts the decoded mp3 to the format of the output stream.
+        SDL_AudioStream* m_music_stream{};
         EventBus::Subscription m_hit_sub{};
         EventBus::Subscription m_destroy_sub{};
     };

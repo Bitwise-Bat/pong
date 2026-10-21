@@ -9,11 +9,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${OUTPUT_DIR}")
 
 find_package(SDL3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
+find_path(DR_LIBS_INCLUDE_DIRS "dr_mp3.h" REQUIRED)
 
 add_executable(pong main.cpp)
 
 target_link_libraries(pong PRIVATE SDL3::SDL3)
 target_link_libraries(pong PRIVATE glm::glm)
+target_include_directories(pong PRIVATE ${DR_LIBS_INCLUDE_DIRS})
 
 set(ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets")
 file(GLOB_RECURSE ASSET_FILES CONFIGURE_DEPENDS "${ASSETS_DIR}/*")
