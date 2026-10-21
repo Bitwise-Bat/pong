@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type {MainModule} from "../wasm/pong";
 import useEvent from "../hooks/useEvent.ts";
+import Skills from "./Skills.tsx";
 
 interface MenuProps {
     game: MainModule
@@ -10,6 +11,7 @@ export default ({ game } : MenuProps) => {
     const [open, setOpen] = useState(true);
     const [shown, setShown] = useState(false);
     const [gameOver, setGameOver] = useState(false);
+    const [skillsOpen, setSkillsOpen] = useState(false);
 
     useEvent("gameOver", () => {
         setGameOver(true);
@@ -42,6 +44,13 @@ export default ({ game } : MenuProps) => {
             >
                 {gameOver ? "Play again" : "Start"}
             </button>
+            <button
+                onClick={() => setSkillsOpen(true)}
+                className="-mt-5 text-xs uppercase tracking-[0.3em] pl-[0.3em] text-white/50 hover:text-white transition-colors cursor-pointer"
+            >
+                Skills
+            </button>
         </div>
+        {skillsOpen && <Skills game={game} onClose={() => setSkillsOpen(false)}/>}
     </div>
 }

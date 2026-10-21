@@ -122,10 +122,53 @@ namespace pong
         ball.base[Stat::Bounds] = 10;
         ball.base[Stat::Speed] = 300;
         ball.base[Stat::Health] = 1;
+        apply_skills(ball);
 
         m_balls.push_back(ball);
 
         generate_boxes();
+    }
+
+    bool Game::can_buy_skill(size_t id) const
+    {
+        if (m_playing || id >= SKILLS.size() || m_skills_owned[id]) return false;
+
+        const SkillDef& skill = SKILLS[id];
+        for (const int8_t parent : skill.parents)
+        {
+            if (parent >= 0 && !m_skills_owned[static_cast<size_t>(parent)]) return false;
+        }
+
+        return m_ores[static_cast<size_t>(skill.cost_material)] >= skill.cost;
+    }
+
+    bool Game::buy_skill(size_t id)
+    {
+        if (!can_buy_skill(id)) return false;
+
+        const auto ore = static_cast<size_t>(SKILLS[id].cost_material);
+        m_ores[ore] -= SKILLS[id].cost;
+        m_skills_owned[id] = true;
+
+        m_bus.publish(OreChanged{ .material = static_cast<uint8_t>(ore), .count = m_ores[ore] });
+        m_bus.publish(SkillBought{ .id = static_cast<uint8_t>(id) });
+        return true;
+    }
+
+    // Same order as Ball::stats(): additions first, then multipliers.
+    void Game::apply_skills(Ball& ball) const
+    {
+        for (const Op op : { Op::Add, Op::Multiply })
+        {
+            for (size_t i = 0; i < SKILLS.size(); ++i)
+            {
+                const Modifier& effect = SKILLS[i].effect;
+                if (!m_skills_owned[i] || effect.op != op) continue;
+
+                if (op == Op::Add) ball.base[effect.stat] += effect.value;
+                else ball.base[effect.stat] *= effect.value;
+            }
+        }
     }
 
     void Game::render(Renderer* r)

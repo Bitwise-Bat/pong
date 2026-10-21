@@ -14,6 +14,7 @@
 #include "paddle.hpp"
 #include "particles.hpp"
 #include "renderer/renderer.hpp"
+#include "skills.hpp"
 
 namespace pong
 {
@@ -28,6 +29,10 @@ namespace pong
         void fixed_update(float delta_time);
 
         [[nodiscard]] std::span<const Ball> balls() const { return m_balls; }
+
+        [[nodiscard]] bool skill_owned(size_t id) const { return m_skills_owned[id]; }
+        [[nodiscard]] bool can_buy_skill(size_t id) const;
+        bool buy_skill(size_t id);
 
     private:
         std::mt19937 m_rng{ std::random_device{}() };
@@ -48,6 +53,7 @@ namespace pong
 
         void apply_box_rewards(Ball& ball, const Box& box, std::vector<Ball>& spawned);
         void generate_boxes();
+        void apply_skills(Ball& ball) const;
 
     private:
         Paddle m_paddle{};
@@ -58,6 +64,7 @@ namespace pong
         Particles m_particles{};
         bool m_playing{};
         std::array<uint32_t, static_cast<size_t>(Material::Count)> m_ores{};
+        std::array<bool, SKILLS.size()> m_skills_owned{};
 
         EventBus m_bus{};
 

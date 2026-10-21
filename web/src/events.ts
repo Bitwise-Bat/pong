@@ -3,6 +3,7 @@ export type PongEvent =
     | { type: "ore";       material: number; count: number }
     | { type: "buffStart"; buff: number; duration: number }
     | { type: "buffEnd";   buff: number }
+    | { type: "skill";     id: number }
     | { type: "gameOver" };
 
 export type EventType = PongEvent["type"];

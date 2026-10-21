@@ -11,6 +11,11 @@ namespace pong
 
     struct GameOver {};
 
+    struct SkillBought
+    {
+        uint8_t id{};
+    };
+
     struct BoxHit {};
 
     struct BoxDestroyed {};
