@@ -12,12 +12,12 @@
 #include "web_bridge.hpp"
 #include "renderer/webgpu/renderer.hpp"
 
-constexpr float FIXED_UPDATE_MS = 1000.0f / 50.0f;
-constexpr float FIXED_UPDATE_INTERVAL = FIXED_UPDATE_MS / 1000.0f;
-constexpr float MAX_FRAME_MS = 250.0f;
-
 namespace
 {
+    constexpr float FIXED_UPDATE_MS = 1000.0f / 50.0f;
+    constexpr float FIXED_UPDATE_INTERVAL = FIXED_UPDATE_MS / 1000.0f;
+    constexpr float MAX_FRAME_MS = 250.0f;
+
     template <class... Args>
     [[noreturn]] void sdl_fatal(
         std::string_view cond, std::string_view file,
