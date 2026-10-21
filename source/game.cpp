@@ -19,7 +19,7 @@ namespace pong
         constexpr int DAMAGE_STAGES = 4;
         constexpr Color WHITE{255, 255, 255, 255};
         constexpr Color BLACK{0, 0, 0, 255};
-        constexpr float BOX_CELL = 40.0f;
+        constexpr float BOX_CELL = 25.0f;
 
         uint16_t material_health(Material material)
         {
