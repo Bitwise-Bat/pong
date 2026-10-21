@@ -472,7 +472,6 @@ namespace pong
         case BoxEffect::Bigger:
             ball.modifiers.push_back({ .stat = Stat::Size,   .op = Op::Add, .value = 2, .remaining = -1.f });
             ball.modifiers.push_back({ .stat = Stat::Bounds, .op = Op::Add, .value = 2, .remaining = -1.f });
-            ball.modifiers.push_back({ .stat = Stat::Damage, .op = Op::Add, .value = 1,  .remaining = -1.f });
             break;
         case BoxEffect::None:
             break;
