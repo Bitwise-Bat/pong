@@ -6,27 +6,11 @@
 #include <SDL3/SDL_main.h>
 #include <memory>
 
+#include "application.hpp"
 #include "game.hpp"
 #include "log.hpp"
+#include "web_bridge.hpp"
 #include "renderer/sdl/renderer.hpp"
-
-template <auto Fn>
-struct SdlDeleter
-{
-    template <class T>
-    void operator()(T* ptr) const noexcept { Fn(ptr); }
-};
-
-using WindowPtr = std::unique_ptr<SDL_Window, SdlDeleter<SDL_DestroyWindow>>;
-struct AppContext
-{
-    std::unique_ptr<pong::SdlRenderer> renderer{};
-    
-    WindowPtr window{};
-    uint64_t last_ns{};
-    
-    pong::Game game{};
-};
 
 namespace
 {
@@ -60,6 +44,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     
     app->game.restart();
     app->last_ns = SDL_GetTicksNS();
+    
+    pong::bridge_attach(app.get());
     
     *appstate = app.release();
 

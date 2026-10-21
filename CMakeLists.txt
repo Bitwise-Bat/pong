@@ -39,4 +39,5 @@ target_sources(pong
             source/paddle.cpp
             source/input.cpp
             source/ball.cpp
-            source/game.cpp)
+            source/game.cpp
+            source/web_bridge.cpp)
