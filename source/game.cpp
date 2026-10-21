@@ -167,8 +167,17 @@ namespace pong
         {
             sample_paddle_input();
             update_balls(delta_time);
-            collide_balls_boxes();
-            collide_balls_balls();
+
+            if (m_balls.empty())
+            {
+                m_playing = false;
+                m_bus.publish(GameOver{ .score = m_score });
+            }
+            else
+            {
+                collide_balls_boxes();
+                collide_balls_balls();
+            }
         }
 
         m_bus.flush();

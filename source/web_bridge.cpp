@@ -37,6 +37,17 @@ namespace
         g_on_event(obj);
     }
 
+    void on_game_over(const pong::GameOver& event)
+    {
+        if (g_on_event.isUndefined()) return;
+
+        emscripten::val obj = emscripten::val::object();
+        obj.set("type", "gameOver");
+        obj.set("score", event.score);
+
+        g_on_event(obj);
+    }
+
     void bridge_start_game()
     {
         if (g_ctx) g_ctx->game.start();
@@ -59,6 +70,7 @@ void pong::bridge_attach(AppContext* ctx)
     
     g_subs.push_back(g_ctx->game.events().subscribe<OreChanged>(&on_ore_changed));
     g_subs.push_back(g_ctx->game.events().subscribe<MoneyChanged>(&on_score_changed));
+    g_subs.push_back(g_ctx->game.events().subscribe<GameOver>(&on_game_over));
 }
 
 EMSCRIPTEN_BINDINGS(pong)
