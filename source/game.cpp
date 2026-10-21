@@ -29,6 +29,7 @@ namespace pong
             case Material::Silver:  return 40;
             case Material::Gold:    return 60;
             case Material::Diamond: return 80;
+            case Material::Count:   break;
             }
             return 1;
         }
@@ -70,6 +71,7 @@ namespace pong
             case Material::Silver:  return {225, 230, 240, 255};
             case Material::Gold:    return {250, 205, 60, 255};
             case Material::Diamond: return {110, 230, 245, 255};
+            case Material::Count:   break;
             }
             return WHITE;
         }
@@ -299,6 +301,9 @@ namespace pong
                     .angle = 0.0f, .spread = 3.14159265f, .count = 16,
                     .color = color, .speed = 220.0f, .life = 0.7f, .size = 5.0f,
                 });
+
+                const auto ore = static_cast<size_t>(box.material);
+                m_bus.publish(OreChanged{ .material = static_cast<uint8_t>(ore), .count = ++m_ores[ore] });
 
                 m_score += static_cast<uint8_t>(stats[Stat::Money]);
                 m_bus.publish(MoneyChanged{ .money = m_score });

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <random>
 #include <span>
@@ -55,6 +56,7 @@ namespace pong
         Field m_field{};
         Particles m_particles{};
         uint32_t m_score{};
+        std::array<uint32_t, static_cast<size_t>(Material::Count)> m_ores{};
 
         EventBus m_bus{};
 

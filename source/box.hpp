@@ -5,7 +5,7 @@
 namespace pong
 {
     enum class BoxEffect : uint8_t { None, ExtraBall, Bigger };
-    enum class Material : uint8_t { Stone, Iron, Bronze, Silver, Gold, Diamond };
+    enum class Material : uint8_t { Stone, Iron, Bronze, Silver, Gold, Diamond, Count };
     
     struct Box
     {

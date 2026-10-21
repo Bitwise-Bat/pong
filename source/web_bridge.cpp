@@ -14,14 +14,15 @@ namespace
     
     std::vector<pong::EventBus::Subscription> g_subs{};
 
-    void on_ball_changed(const pong::BallChanged& event)
+    void on_ore_changed(const pong::OreChanged& event)
     {
-        if (g_on_event.isUndefined()) return; 
-    
+        if (g_on_event.isUndefined()) return;
+
         emscripten::val obj = emscripten::val::object();
-        obj.set("type", "balls");
+        obj.set("type", "ore");
+        obj.set("material", event.material);
         obj.set("count", event.count);
-    
+
         g_on_event(obj);
     }
 
@@ -51,7 +52,7 @@ void pong::bridge_attach(AppContext* ctx)
 {
     g_ctx = ctx;
     
-    g_subs.push_back(g_ctx->game.events().subscribe<BallChanged>(&on_ball_changed));
+    g_subs.push_back(g_ctx->game.events().subscribe<OreChanged>(&on_ore_changed));
     g_subs.push_back(g_ctx->game.events().subscribe<MoneyChanged>(&on_score_changed));
 }
 
