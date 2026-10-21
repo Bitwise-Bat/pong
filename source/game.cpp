@@ -421,7 +421,7 @@ namespace pong
 
     void Game::generate_boxes()
     {
-        constexpr size_t rows = 5;
+        constexpr size_t rows = 10;
         const size_t cols = static_cast<size_t>(m_field.width / BOX_CELL);
 
         for (size_t y = 0; y < rows; ++y)
