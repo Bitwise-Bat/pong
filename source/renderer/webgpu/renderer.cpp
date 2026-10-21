@@ -60,6 +60,11 @@ fn fs_main(in: VsOut) -> @location(0) vec4f
 {
     // Sampled unconditionally to stay in uniform control flow; texture -1 means untextured.
     let sampled = textureSample(textures, texture_sampler, in.texture_uv, max(in.texture, 0));
+    if (in.texture >= 0)
+    {
+        return in.color * sampled;
+    }
+
     let border_width : f32 = 0.025;
     
     let is_border = in.uv.x < border_width || in.uv.x > (1.0 - border_width) ||
@@ -70,12 +75,7 @@ fn fs_main(in: VsOut) -> @location(0) vec4f
         return vec4f(0, 0, 0, 1);
     }
 
-    if (in.texture < 0)
-    {
-        return in.color;
-    }
-
-    return in.color * sampled;
+    return in.color;
 }
 )";
     }
