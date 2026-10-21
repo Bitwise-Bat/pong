@@ -6,11 +6,14 @@
 #include "collision.hpp"
 #include "events.hpp"
 #include "log.hpp"
+#include "utils.hpp"
 
 namespace pong
 {
     namespace
     {
+        constexpr Rect BACKGROUND_PIXELS{0.0f, 0.0f, 1024.0f, 572.0f};
+
         void resolve_overlap(Ball& ball, float dx, float dy)
         {
             ball.x += dx;
@@ -52,6 +55,11 @@ namespace pong
 
     void Game::render(Renderer* r)
     {
+        // Fit the background to the field height, keeping its aspect; the right side may overflow.
+        const float background_width = m_field.height * BACKGROUND_PIXELS.w / BACKGROUND_PIXELS.h;
+        r->fill_rect({0.0f, 0.0f, background_width, m_field.height}, {255, 255, 255, 255},
+                     0, pixels_to_uv(BACKGROUND_PIXELS));
+
         for (const auto& ball : m_balls)
         {
             r->fill_rect(ball.hitbox(), {255, 255, 255, 255});
